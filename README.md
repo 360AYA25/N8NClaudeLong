@@ -83,10 +83,15 @@ claude mcp list
 
 **Installation:**
 ```bash
-/plugin install czlonkowski/n8n-skills
+# Step 1: Add marketplace
+/plugin marketplace add czlonkowski/n8n-skills
+
+# Step 2: Install plugin (interactive)
+/plugin
+# Or directly: /plugin install n8n-mcp-skills@czlonkowski/n8n-skills
 ```
 
-Skills activate automatically based on your queries, providing expert guidance for workflow building.
+Skills install globally to `~/.claude/plugins/cache/` and activate automatically based on your queries, providing expert guidance for workflow building.
 
 **Repository:** [czlonkowski/n8n-skills](https://github.com/czlonkowski/n8n-skills)
 
