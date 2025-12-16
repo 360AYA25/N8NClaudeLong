@@ -60,13 +60,35 @@ N8N_API_KEY=your-api-key-here
 1. `npm install`
 2. Edit [`.mcp.json`](.mcp.json) with your n8n credentials
 3. Run `claude mcp list` to verify connection
-4. Use `/mcp` in Claude Code to see all tools
+4. **Install n8n-skills**: `/plugin install czlonkowski/n8n-skills`
+5. Use `/mcp` in Claude Code to see all tools
 
 **Verify installation:**
 ```bash
 claude mcp list
 # Should show: n8n-mcp: npx n8n-mcp - ✓ Connected
 ```
+
+## 🎓 n8n Skills (Recommended)
+
+**7 specialized knowledge modules** that teach Claude Code how to build production-ready n8n workflows:
+
+1. **n8n Expression Syntax** - `{{}}` patterns, `$json`, `$node`, webhook data access
+2. **n8n MCP Tools Expert** - Efficient tool usage and parameter formatting
+3. **n8n Workflow Patterns** - 5 proven architectures from 2,653+ templates
+4. **n8n Validation Expert** - Error interpretation and resolution
+5. **n8n Node Configuration** - Operation-specific requirements
+6. **n8n Code JavaScript** - Top 5 error patterns with solutions (62%+ failures)
+7. **n8n Code Python** - Standard library usage and limitations
+
+**Installation:**
+```bash
+/plugin install czlonkowski/n8n-skills
+```
+
+Skills activate automatically based on your queries, providing expert guidance for workflow building.
+
+**Repository:** [czlonkowski/n8n-skills](https://github.com/czlonkowski/n8n-skills)
 
 ## 🛠️ Available MCP Tools (20 Total)
 

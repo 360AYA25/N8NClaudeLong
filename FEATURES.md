@@ -203,9 +203,73 @@ IF nodes have **two outputs** (TRUE and FALSE). Use the **`branch` parameter**:
  sourcePort: "main", targetPort: "main", branch: "false"}
 ```
 
+## 🎓 n8n Skills Integration
+
+**7 specialized knowledge modules** that enhance Claude Code's n8n capabilities:
+
+### Available Skills
+
+1. **n8n Expression Syntax**
+   - Core variables: `$json`, `$node`, `$input`
+   - `{{}}` pattern usage
+   - Webhook data access via `$json.body`
+   - Special emphasis on common pitfalls
+
+2. **n8n MCP Tools Expert** (Highest Priority)
+   - Effective use of n8n-mcp tools
+   - nodeType formatting conventions
+   - Validation profile selection
+   - Parameter optimization
+
+3. **n8n Workflow Patterns**
+   - 5 architectural patterns from 2,653+ templates
+   - Webhook processing flows
+   - API integration patterns
+   - Data transformation pipelines
+   - Error handling strategies
+
+4. **n8n Validation Expert**
+   - Validation error interpretation
+   - False positive recognition
+   - Quick resolution strategies
+   - Common configuration mistakes
+
+5. **n8n Node Configuration**
+   - Operation-specific requirements
+   - Property dependencies
+   - Required vs optional fields
+   - Default value pitfalls
+
+6. **n8n Code JavaScript**
+   - Data access patterns in Code node
+   - Top 5 error patterns with solutions (covers 62%+ failures)
+   - Production-tested patterns
+   - Performance considerations
+
+7. **n8n Code Python**
+   - Standard library usage
+   - Important limitation: **no external libraries** (requests, pandas, numpy)
+   - Data transformation patterns
+   - Error handling in Python context
+
+### How Skills Work
+
+- **Automatic Activation**: Skills engage based on query context
+- **Seamless Composition**: Multiple skills activate simultaneously for complex tasks
+- **No Manual Selection**: System recognizes relevant skills automatically
+- **Production-Tested**: Based on 525+ n8n nodes and 10 production patterns
+
+### Installation
+
+```bash
+/plugin install czlonkowski/n8n-skills
+```
+
+Skills will automatically enhance workflow building quality by applying correct patterns and avoiding common mistakes.
+
 ## 📚 Resources
 
-- **Repository**: https://github.com/czlonkowski/n8n-mcp
+- **MCP Repository**: https://github.com/czlonkowski/n8n-mcp (10.8k⭐)
+- **Skills Repository**: https://github.com/czlonkowski/n8n-skills
 - **Dashboard**: https://dashboard.n8n-mcp.com
-- **Stars**: 10.8k+ on GitHub
 - **License**: MIT
