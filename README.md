@@ -76,25 +76,29 @@ npm start
 npm run start:http
 ```
 
-## 🤖 Claude Desktop Integration
+## 🤖 Claude Code Integration (VS Code)
 
-Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+**Файл уже создан:** [`.vscode/mcp.json`](.vscode/mcp.json)
 
 ```json
 {
-  "mcpServers": {
-    "n8n-claude": {
-      "command": "node",
-      "args": ["/absolute/path/to/N8NClaudeOnly/dist/mcp/index.js"],
-      "env": {
-        "MCP_MODE": "stdio"
-      }
+  "n8n-claude": {
+    "command": "node",
+    "args": ["${workspaceFolder}/dist/mcp/index.js"],
+    "env": {
+      "MCP_MODE": "stdio",
+      "DATABASE_PATH": "${workspaceFolder}/data/nodes.db"
     }
   }
 }
 ```
 
-Restart Claude Desktop to load the MCP server.
+**Быстрый старт:**
+1. `npm install && npm run build`
+2. Reload VS Code: `Cmd+Shift+P` → "Developer: Reload Window"
+3. Откройте Claude Code и начните работать!
+
+**Полная инструкция:** [docs/CLAUDE_CODE_SETUP.md](docs/CLAUDE_CODE_SETUP.md)
 
 ## 🛠️ Available MCP Tools
 
@@ -164,6 +168,7 @@ src/
 
 ## 📚 Documentation
 
+- **[Claude Code Setup](docs/CLAUDE_CODE_SETUP.md)** - VS Code integration guide (start here!)
 - [Usage Guide](docs/USAGE.md) - Detailed tool usage and examples
 - [Architecture](docs/ARCHITECTURE.md) - System design and patterns
 

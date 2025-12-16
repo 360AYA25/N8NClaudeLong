@@ -1,0 +1,11 @@
+{
+  "n8n-claude": {
+    "command": "node",
+    "args": ["${workspaceFolder}/dist/mcp/index.js"],
+    "env": {
+      "MCP_MODE": "stdio",
+      "DATABASE_PATH": "${workspaceFolder}/data/nodes.db",
+      "LOG_LEVEL": "info"
+    }
+  }
+}
