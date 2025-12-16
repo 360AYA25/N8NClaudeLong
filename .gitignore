@@ -1,0 +1,63 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.production
+.env.test
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+*.lcov
+.vitest/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Database files (except tracked ones)
+*.db-journal
+*.db-wal
+*.db-shm
+data/*.db
+!data/nodes.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+.cache/
+
+# Docker
+docker-compose.override.yml
+
+# MCP specific
+mcp-logs/
+claude-desktop-config/
+n8n-docs/
+
+# Package tarballs
+*.tgz
