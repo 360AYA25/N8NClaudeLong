@@ -47,10 +47,10 @@ export class N8nClient {
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${this.apiUrl}${endpoint}`;
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'X-N8N-API-KEY': this.apiKey,
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...(options.headers as Record<string, string>),
     };
 
     try {
@@ -69,7 +69,7 @@ export class N8nClient {
         );
       }
 
-      return await response.json();
+      return (await response.json()) as T;
     } catch (error) {
       if (error instanceof N8nApiError) throw error;
       throw new N8nApiError(`Failed to connect to n8n API: ${error}`);

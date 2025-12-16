@@ -96,18 +96,18 @@ export async function startHttpServer() {
     }
     try {
       const result = await handlers.handleCreateWorkflow(req.body);
-      res.json(result);
+      return res.json(result);
     } catch (error) {
-      res.status(500).json({ error: String(error) });
+      return res.status(500).json({ error: String(error) });
     }
   });
 
   app.post('/tools/validate_workflow', async (req: Request, res: Response) => {
     try {
       const result = await handlers.handleValidateWorkflow(req.body);
-      res.json(result);
+      return res.json(result);
     } catch (error) {
-      res.status(500).json({ error: String(error) });
+      return res.status(500).json({ error: String(error) });
     }
   });
 
@@ -117,9 +117,9 @@ export async function startHttpServer() {
     }
     try {
       const result = await handlers.handleGetWorkflow(req.body);
-      res.json(result);
+      return res.json(result);
     } catch (error) {
-      res.status(500).json({ error: String(error) });
+      return res.status(500).json({ error: String(error) });
     }
   });
 
@@ -129,9 +129,9 @@ export async function startHttpServer() {
     }
     try {
       const result = await handlers.handleUpdateWorkflow(req.body);
-      res.json(result);
+      return res.json(result);
     } catch (error) {
-      res.status(500).json({ error: String(error) });
+      return res.status(500).json({ error: String(error) });
     }
   });
 
@@ -141,9 +141,9 @@ export async function startHttpServer() {
     }
     try {
       const result = await handlers.handleListWorkflows();
-      res.json(result);
+      return res.json(result);
     } catch (error) {
-      res.status(500).json({ error: String(error) });
+      return res.status(500).json({ error: String(error) });
     }
   });
 
@@ -153,9 +153,9 @@ export async function startHttpServer() {
     }
     try {
       const result = await handlers.handleExecuteWorkflow(req.body);
-      res.json(result);
+      return res.json(result);
     } catch (error) {
-      res.status(500).json({ error: String(error) });
+      return res.status(500).json({ error: String(error) });
     }
   });
 
