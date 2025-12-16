@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "n8n-claude": {
+      "command": "node",
+      "args": ["./dist/mcp/index.js"],
+      "env": {
+        "MCP_MODE": "stdio",
+        "DATABASE_PATH": "./data/nodes.db",
+        "LOG_LEVEL": "info"
+      }
+    }
+  }
+}
