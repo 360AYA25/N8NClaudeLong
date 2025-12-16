@@ -1,201 +1,140 @@
 # n8n-claude-only
 
-MCP (Model Context Protocol) server enabling Claude Code to create and manage n8n workflows with full automation capabilities.
+n8n-mcp integration for Claude Code CLI.
 
 ## Overview
 
-This project provides AI assistants like Claude with structured access to n8n's workflow automation platform. It enables intelligent workflow generation, validation, and management through a comprehensive set of MCP tools.
+This project integrates [n8n-mcp](https://github.com/czlonkowski/n8n-mcp) (10.8k⭐) with Claude Code CLI, enabling AI-assisted n8n workflow creation and management.
 
 ## ✨ Features
 
-- 🔍 **Node Search** - Search and discover 543+ n8n nodes with full documentation
-- ✅ **Workflow Validation** - Validate workflow structure and node configurations
-- 📚 **Template Library** - Access 2,709+ pre-built workflow templates
-- 🔧 **Workflow Management** - Create, update, execute, and monitor workflows
-- 🚀 **Dual Modes** - Run as stdio (Claude Desktop) or HTTP server
-- 💾 **SQLite Database** - Efficient local storage for nodes and templates
-- 🔐 **n8n API Integration** - Direct integration with n8n instances
-
-## 🎯 Use Cases
-
-- **AI-Assisted Workflow Creation** - Let Claude design workflows based on requirements
-- **Workflow Validation** - Check workflows before deployment
-- **Template Discovery** - Find and customize existing workflows
-- **Documentation Lookup** - Get instant node documentation and examples
-- **Automation Testing** - Execute and monitor workflow runs
+- 🔍 **543+ n8n nodes** - Full documentation and property schemas
+- ✅ **99% property coverage** - Complete configuration access
+- 📚 **2,709+ templates** - Pre-built workflows with metadata
+- 🤖 **271 AI nodes** - LangChain and AI agent support
+- 🔧 **20 MCP tools** - Complete workflow management
+- 🚀 **~12ms response time** - Optimized SQLite database
+- 🔐 **n8n API integration** - Direct instance management
 
 ## Installation
 
 ```bash
-# Install dependencies
 npm install
-
-# Build project
-npm run build
-
-# Start server
-npm start
 ```
 
 ## Configuration
 
-Copy `.env.example` to `.env` and configure:
+Edit [`.env`](.env) with your n8n credentials:
 
 ```bash
-cp .env.example .env
+N8N_API_URL=https://your-n8n-instance.com
+N8N_API_KEY=your-api-key-here
 ```
 
-### Required Settings
+## 🤖 Claude Code CLI Setup
 
-- `MCP_MODE` - Server mode (`stdio` or `http`)
-
-### Optional Settings
-
-- `N8N_API_URL` - Your n8n instance URL
-- `N8N_API_KEY` - n8n API authentication token
-- `DATABASE_PATH` - Path to SQLite database
-
-## 🚀 Usage
-
-### Development Mode
-
-```bash
-npm run dev
-```
-
-### Production Mode
-
-```bash
-npm run build
-npm start
-```
-
-### HTTP Server Mode
-
-```bash
-npm run start:http
-```
-
-## 🤖 Claude Code Integration (VS Code)
-
-**Файл уже создан:** [`.vscode/mcp.json`](.vscode/mcp.json)
+**Configuration file:** [`.mcp.json`](.mcp.json)
 
 ```json
 {
-  "n8n-claude": {
-    "command": "node",
-    "args": ["${workspaceFolder}/dist/mcp/index.js"],
-    "env": {
-      "MCP_MODE": "stdio",
-      "DATABASE_PATH": "${workspaceFolder}/data/nodes.db"
+  "mcpServers": {
+    "n8n-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["n8n-mcp"],
+      "env": {
+        "MCP_MODE": "stdio",
+        "N8N_API_URL": "https://your-n8n-instance.com",
+        "N8N_API_KEY": "your-api-key",
+        "LOG_LEVEL": "error",
+        "DISABLE_CONSOLE_OUTPUT": "true",
+        "WEBHOOK_SECURITY_MODE": "moderate",
+        "N8N_MCP_TELEMETRY_DISABLED": "true"
+      }
     }
   }
 }
 ```
 
-**Быстрый старт:**
-1. `npm install && npm run build`
-2. Reload VS Code: `Cmd+Shift+P` → "Developer: Reload Window"
-3. Откройте Claude Code и начните работать!
+**Quick Start:**
+1. `npm install`
+2. Edit [`.mcp.json`](.mcp.json) with your n8n credentials
+3. Run `claude mcp list` to verify connection
+4. Use `/mcp` in Claude Code to see all tools
 
-**Полная инструкция:** [docs/CLAUDE_CODE_SETUP.md](docs/CLAUDE_CODE_SETUP.md)
-
-## 🛠️ Available MCP Tools
-
-### Documentation Tools
-- `search_nodes` - Search for n8n nodes by functionality
-- `get_node` - Get detailed node information and properties
-- `validate_node` - Validate node configuration
-
-### Template Tools
-- `search_templates` - Find workflow templates by category/complexity
-- `get_template` - Get complete workflow JSON
-
-### Workflow Management (requires n8n API)
-- `create_workflow` - Create new workflows in n8n
-- `get_workflow` - Retrieve existing workflows
-- `update_workflow` - Modify workflows
-- `list_workflows` - List all workflows
-- `execute_workflow` - Run workflows
-- `validate_workflow` - Validate complete workflow structure
-
-See [docs/USAGE.md](docs/USAGE.md) for detailed tool documentation.
-
-## Testing
-
+**Verify installation:**
 ```bash
-# Run all tests
-npm test
-
-# Run unit tests
-npm run test:unit
-
-# Run integration tests
-npm run test:integration
-
-# Run e2e tests
-npm run test:e2e
+claude mcp list
+# Should show: n8n-mcp: npx n8n-mcp - ✓ Connected
 ```
+
+## 🛠️ Available MCP Tools (20 Total)
+
+### Documentation Tools (7)
+- `tools_documentation` - Help for any MCP tool
+- `search_nodes` - Search 543+ nodes with examples
+- `get_node` - Detailed node info (minimal/standard/full)
+- `validate_node` - Configuration validation
+- `validate_workflow` - Complete workflow validation
+- `search_templates` - Multi-mode template discovery
+- `get_template` - Retrieve complete workflow JSON
+
+### Workflow Management (8 - requires n8n API)
+- `n8n_create_workflow` - Create new workflows
+- `n8n_get_workflow` - Retrieve workflows
+- `n8n_update_full_workflow` - Complete updates
+- `n8n_update_partial_workflow` - Incremental updates with diff operations
+- `n8n_delete_workflow` - Remove workflows
+- `n8n_list_workflows` - List all workflows
+- `n8n_validate_workflow` - Validate by ID
+- `n8n_autofix_workflow` - Auto-fix common errors
+
+### Execution & Testing (1)
+- `n8n_test_workflow` - Test/trigger workflow execution
+
+### Execution Management (3)
+- `n8n_executions` - Get/list/delete execution records
+
+### Version Control (1)
+- `n8n_workflow_versions` - Version history & rollback
+
+### Template Deployment (1)
+- `n8n_deploy_template` - Deploy from n8n.io directly
+
+### System Tools (1)
+- `n8n_health_check` - API connectivity verification
+
+**📖 Full documentation:** [FEATURES.md](FEATURES.md)
 
 ## 📁 Project Structure
 
 ```
-src/
-├── config/              # Configuration management
-├── database/            # SQLite schema and repositories
-│   ├── repositories/    # Data access layer
-│   ├── schema.ts        # Database schema
-│   └── client.ts        # SQLite client
-├── mcp/                 # MCP protocol implementation
-│   ├── server.ts        # MCP server
-│   ├── tools.ts         # Tool definitions
-│   ├── handlers.ts      # Tool execution
-│   └── index.ts         # CLI entry point
-├── n8n/                 # n8n API integration
-│   └── client.ts        # REST API client
-├── services/            # Business logic layer
-│   ├── NodeService.ts
-│   ├── WorkflowService.ts
-│   ├── ValidationService.ts
-│   └── TemplateService.ts
-├── loaders/             # Data loading utilities
-├── utils/               # Helper functions
-├── types/               # TypeScript definitions
-├── errors/              # Custom error classes
-├── index.ts             # Main entry point
-└── http-server.ts       # HTTP mode server
+N8NClaudeOnly/
+├── .mcp.json            ← MCP server config (Claude Code CLI)
+├── CLAUDE.md            ← n8n workflow expert prompt
+├── FEATURES.md          ← Complete list of 20 MCP tools
+├── .env                 ← Optional: additional configuration
+├── README.md
+└── package.json         ← n8n-mcp dependency
 ```
 
-## 📚 Documentation
+## ⚠️ Safety Guidelines
 
-- **[Claude Code Setup](docs/CLAUDE_CODE_SETUP.md)** - VS Code integration guide (start here!)
-- [Usage Guide](docs/USAGE.md) - Detailed tool usage and examples
-- [Architecture](docs/ARCHITECTURE.md) - System design and patterns
+**NEVER edit production workflows directly with AI!** Always:
+- ✅ Create workflow copies before modifications
+- ✅ Test in development environments
+- ✅ Export backups of important workflows
+- ✅ Validate all changes before production deployment
 
-## 🔧 Development
+## 🎯 Best Practices
 
-```bash
-# Type checking
-npm run typecheck
+1. **Templates First** - Check 2,709 templates before building from scratch
+2. **Silent Execution** - Execute tools without commentary
+3. **Parallel Operations** - Run independent tasks simultaneously
+4. **Multi-Level Validation** - Quick check → Full validation → Workflow validation
+5. **Never Trust Defaults** - Explicitly configure ALL parameters
 
-# Linting
-npm run lint
-
-# Fix linting issues
-npm run lint:fix
-```
-
-## 🧪 Testing
-
-```bash
-# Run all tests
-npm test
-
-# Run specific test suites
-npm run test:unit
-npm run test:integration
-npm run test:e2e
-```
+See [FEATURES.md](FEATURES.md) for detailed usage patterns.
 
 ## 🤝 Contributing
 
