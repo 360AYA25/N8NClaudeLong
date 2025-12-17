@@ -452,11 +452,13 @@ n8n_update_partial_workflow({
 
 ### Перед КАЖДОЙ попыткой исправления
 
-**Шаг 1: Проверить LEARNINGS.md**
+**Step 1: Check learning/INDEX.md**
 ```javascript
-Grep({pattern: "ключевые слова ошибки", path: "LEARNINGS.md"})
+Read("learning/INDEX.md")  // Find category (~500 tokens)
+// Example: "Switch Node" → Line 517
+Read("learning/LEARNINGS.md", {offset: 517, limit: 50})  // Read section (~400 tokens)
 ```
-Если найдено → применить известное решение
+If found → apply known solution
 
 **Шаг 2: Сохранить checkpoint**
 ```javascript
@@ -489,7 +491,7 @@ TodoWrite([
 | Попытка | Действие | Обоснование |
 |---------|----------|-------------|
 | 1-2 | Прямые фиксы | Нормальный trial-and-error |
-| 3 | **СТОП!** Проверить LEARNINGS.md | Возможно уже решал |
+| 3 | **STOP!** Check learning/INDEX.md | Maybe already solved |
 | 4-5 | Искать альтернативный подход | Очевидные решения исчерпаны |
 | 6+ | **Спросить пользователя** | Hard cap - нужна помощь |
 
@@ -516,8 +518,8 @@ TodoWrite([
 ### После решения проблемы (ОБЯЗАТЕЛЬНО)
 
 ```javascript
-// 1. Записать в LEARNINGS.md
-Edit("LEARNINGS.md", добавить новую запись в нужную категорию)
+// 1. Record in learning/LEARNINGS.md
+Edit("learning/LEARNINGS.md", add new entry in category)
 
 // 2. Обновить Quick Index если новая категория
 // 3. Очистить TodoWrite
@@ -558,9 +560,10 @@ n8n_workflow_versions({mode: "list", workflowId: "ID", limit: 3})
 TodoWrite([{content: "Checkpoint: v#X", status: "completed", activeForm: "Saved"}])
 ```
 
-**Шаг 2: Проверить LEARNINGS.md**
+**Step 2: Check learning/INDEX.md + LEARNINGS.md**
 ```javascript
-Grep({pattern: "ключевые слова", path: "LEARNINGS.md", output_mode: "content"})
+Read("learning/INDEX.md")  // Find category (~500 tokens)
+Read("learning/LEARNINGS.md", {offset: LINE, limit: 50})  // Targeted read (~400 tokens)
 ```
 
 **Шаг 3: Record start in debug_log.md**
@@ -605,7 +608,7 @@ n8n_validate_workflow({id: "..."})
 ```
 Попытка 1: ❌ → Edit debug_log.md: record what failed
 Попытка 2: ❌ → Edit debug_log.md: record, compare with attempt 1
-Попытка 3: ❌ → СТОП! Read debug_log.md + LEARNINGS.md, find alternative
+Attempt 3: ❌ → STOP! Read debug_log.md + learning/INDEX.md, find alternative
 Попытка 6+: ❌ → Ask user OR rollback to checkpoint
 ```
 
@@ -670,8 +673,8 @@ n8n_validate_workflow({id: "..."})
 // 2. Update debug_log.md with resolution
 Edit("projects/[workflow-name]/debug_log.md", mark as resolved)
 
-// 3. Записать решение в LEARNINGS.md (if new learning)
-Edit("LEARNINGS.md", добавить запись)
+// 3. Record solution in learning/LEARNINGS.md (if new learning)
+Edit("learning/LEARNINGS.md", add entry)
 
 // 4. Очистить TodoWrite
 TodoWrite([{content: "Debug complete", status: "completed", activeForm: "Done"}])
@@ -682,8 +685,8 @@ TodoWrite([{content: "Debug complete", status: "completed", activeForm: "Done"}]
 // 1. Предложить rollback
 n8n_workflow_versions({mode: "rollback", workflowId: "ID"})
 
-// 2. Записать что НЕ сработало в LEARNINGS.md
-Edit("LEARNINGS.md", добавить "Tried but failed")
+// 2. Record what DIDN'T work in learning/LEARNINGS.md
+Edit("learning/LEARNINGS.md", add "Tried but failed")
 
 // 3. Спросить пользователя
 ```
@@ -719,7 +722,7 @@ See [Docs/SESSION_INIT_GUIDE.md](Docs/SESSION_INIT_GUIDE.md) for full guide.
 ```
 □ Create/check folder projects/[workflow-name]/
 □ Read projects/[workflow-name]/PROJECT_STATE.md (or create)
-□ Read LEARNINGS.md Quick Index (know what was solved before)
+□ Read learning/INDEX.md (know what was solved before)
 □ Check n8n_workflow_versions (know versions)
 □ Create TodoWrite plan (progress tracking)
 □ Determine checkpoint (for rollback)
@@ -733,6 +736,89 @@ See [Docs/SESSION_INIT_GUIDE.md](Docs/SESSION_INIT_GUIDE.md) for full guide.
 □ Check latest workflow changes
 □ Verify n8n version matches expected
 □ Continue from last point or restart
+```
+
+---
+
+## Learning System
+
+**Location:** `learning/INDEX.md` + `learning/LEARNINGS.md` (1,326 lines)
+
+### Structure
+
+```
+learning/
+  INDEX.md           # Index with line numbers (~500 tokens)
+  LEARNINGS.md       # All knowledge in one file (1,326 lines)
+  N8N-RESOURCES.md   # External resources
+  archive/           # Old files backup
+```
+
+### Read Protocol
+
+```javascript
+// Step 1: Read INDEX (~500 tokens)
+Read("learning/INDEX.md")
+
+// Step 2: Find category line number
+// Example: "Switch Node" → Line 517
+
+// Step 3: Read targeted section (~300-500 tokens)
+Read("learning/LEARNINGS.md", {offset: 517, limit: 80})
+
+// Total: ~800-1000 tokens vs 10K+ full file = 90% savings
+```
+
+### Write Protocol
+
+```javascript
+// After solving issue:
+
+// 1. Determine category (node/operation/debugging)
+// 2. Read category section
+Read("learning/LEARNINGS.md", {offset: LINE, limit: 50})
+
+// 3. Add entry at TOP of category (newest first)
+Edit("learning/LEARNINGS.md",
+  old_string: "## Category\n\n### [2025-12-15...",
+  new_string: "## Category\n\n### [2025-12-17 NEW]\n...\n\n### [2025-12-15..."
+)
+
+// 4. Update INDEX.md only if line numbers shifted >50 lines
+```
+
+### Quick Access (Check Before Config)
+
+Before configuring nodes:
+1. **Set Node** → Line 32 (Critical Patterns)
+2. **IF Node** → Line 146 (MCP - branch param)
+3. **Switch Node** → Line 517 (full section)
+4. **addConnection** → Line 146 (4-param format)
+5. **L-067 execution** → Line 871 (two-step mode)
+
+Before debugging:
+- **Execution Analysis** → Line 871
+- **Anti-Loop Protocol** → Line 914
+- **Common Errors** → Line 1258
+
+### Entry Format
+
+```markdown
+### [YYYY-MM-DD HH:MM] Short Title (L-XXX)
+
+**Problem:** What went wrong
+**Tried:**
+- Attempt 1: [action] → [result]
+- Attempt 2: [action] → [result]
+**Root Cause:** Technical reason
+**Solution:**
+\`\`\`javascript
+// Code or commands
+\`\`\`
+**Prevention:** How to avoid
+**Impact:** HIGH/MEDIUM/LOW
+**Tags:** #tag1 #tag2 #tag3
+**Reference:** Project name
 ```
 
 ---
