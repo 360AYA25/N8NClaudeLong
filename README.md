@@ -1,4 +1,4 @@
-# n8n-claude-only
+# N8NClaudeLong
 
 n8n-mcp integration for Claude Code CLI.
 
@@ -148,7 +148,7 @@ Skills install globally to `~/.claude/plugins/cache/` and activate automatically
 ## 📁 Project Structure
 
 ```
-N8NClaudeOnly/
+N8NClaudeLong/
 ├── .mcp.json            ← MCP server config (Claude Code CLI)
 ├── CLAUDE.md            ← n8n workflow expert prompt
 ├── FEATURES.md          ← Complete list of 20 MCP tools

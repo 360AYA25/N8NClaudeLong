@@ -1,5 +1,5 @@
 {
-  "name": "n8n-claude-only",
+  "name": "n8n-claude-long",
   "version": "1.0.0",
   "description": "n8n-mcp integration for Claude Code in VS Code",
   "scripts": {
