@@ -61,3 +61,6 @@ n8n-docs/
 
 # Package tarballs
 *.tgz
+
+# MCP configuration with credentials
+.mcp.json

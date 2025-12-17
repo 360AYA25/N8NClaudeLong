@@ -24,16 +24,28 @@ npm install
 
 ## Configuration
 
-Edit [`.env`](.env) with your n8n credentials:
+### 🔐 Security First
 
+**IMPORTANT:** Never commit credentials to git!
+
+1. Copy the example configuration:
+```bash
+cp .mcp.json.example .mcp.json
+```
+
+2. Edit `.mcp.json` with your n8n credentials:
 ```bash
 N8N_API_URL=https://your-n8n-instance.com
 N8N_API_KEY=your-api-key-here
 ```
 
+3. Optional: Edit `.env` for additional configuration
+
+**Note:** `.mcp.json` is in `.gitignore` and will not be committed.
+
 ## 🤖 Claude Code CLI Setup
 
-**Configuration file:** [`.mcp.json`](.mcp.json)
+**Configuration file:** `.mcp.json` (create from [`.mcp.json.example`](.mcp.json.example))
 
 ```json
 {
