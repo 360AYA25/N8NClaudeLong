@@ -539,7 +539,17 @@ n8n_workflow_versions({
 
 ## Debug Session Protocol
 
+**CRITICAL:** Always use `projects/[workflow-name]/debug_log.md` to track attempts (Anti-Loop)
+
 ### Начало debug-сессии
+
+**Шаг 0: Check debug_log.md FIRST**
+```javascript
+// MANDATORY: Read before starting
+Read("projects/[workflow-name]/debug_log.md")
+// Check: Was this issue already attempted?
+// Check: What solutions were tried?
+```
 
 **Шаг 1: Сохранить checkpoint**
 ```javascript
@@ -553,7 +563,21 @@ TodoWrite([{content: "Checkpoint: v#X", status: "completed", activeForm: "Saved"
 Grep({pattern: "ключевые слова", path: "LEARNINGS.md", output_mode: "content"})
 ```
 
-**Шаг 3: Составить план**
+**Шаг 3: Record start in debug_log.md**
+```javascript
+// MANDATORY: Write BEFORE attempting fix
+Edit("projects/[workflow-name]/debug_log.md", add entry:)
+```
+```markdown
+### [YYYY-MM-DD HH:MM] - Issue Name
+
+**Cycle:** 1
+**Problem:** Brief description
+**Attempt:** What I'm trying
+**Result:** [Will update after]
+```
+
+**Шаг 4: Составить план**
 ```javascript
 TodoWrite([
   {content: "Checkpoint saved: v#X", status: "completed", activeForm: "..."},
@@ -579,9 +603,20 @@ n8n_validate_workflow({id: "..."})
 
 **Если ошибка повторяется:**
 ```
-Попытка 1: ❌ → записать что не сработало
-Попытка 2: ❌ → записать, сравнить с попыткой 1
-Попытка 3: ❌ → СТОП! Grep LEARNINGS.md, искать альтернативу
+Попытка 1: ❌ → Edit debug_log.md: record what failed
+Попытка 2: ❌ → Edit debug_log.md: record, compare with attempt 1
+Попытка 3: ❌ → СТОП! Read debug_log.md + LEARNINGS.md, find alternative
+Попытка 6+: ❌ → Ask user OR rollback to checkpoint
+```
+
+**MANDATORY after each attempt:**
+```javascript
+// Update debug_log.md with result
+Edit("projects/[workflow-name]/debug_log.md", update entry:)
+```
+```markdown
+**Result:** ✅ WORKED / ❌ FAILED / ⚠️ PARTIAL
+**Notes:** What happened, observations
 ```
 
 ### Изоляция изменений
@@ -632,10 +667,13 @@ n8n_executions({
 // 1. Финальная валидация
 n8n_validate_workflow({id: "..."})
 
-// 2. Записать решение в LEARNINGS.md
+// 2. Update debug_log.md with resolution
+Edit("projects/[workflow-name]/debug_log.md", mark as resolved)
+
+// 3. Записать решение в LEARNINGS.md (if new learning)
 Edit("LEARNINGS.md", добавить запись)
 
-// 3. Очистить TodoWrite
+// 4. Очистить TodoWrite
 TodoWrite([{content: "Debug complete", status: "completed", activeForm: "Done"}])
 ```
 
@@ -654,22 +692,47 @@ Edit("LEARNINGS.md", добавить "Tried but failed")
 
 ## Session Start Checklist
 
-### При начале работы над workflow
+### 🆕 Project Organization Rule
+
+**CRITICAL:** All files for a specific workflow must be stored in `projects/[workflow-name]/`
+
+```bash
+# Create project folder (for new workflow)
+mkdir -p projects/foodtracker
+
+# Structure:
+projects/
+  foodtracker/
+    PROJECT_STATE.md    # Required: current state
+    notes.md            # Optional: notes, ideas
+    debug_log.md        # Optional: debug sessions
+```
+
+**Rule:** One workflow = one folder in `projects/`
+
+See [Docs/SESSION_INIT_GUIDE.md](Docs/SESSION_INIT_GUIDE.md) for full guide.
+
+---
+
+### When starting work on a workflow
 
 ```
-□ Прочитать LEARNINGS.md Quick Index (знать что уже решал)
-□ Проверить n8n_workflow_versions (знать версии)
-□ Создать TodoWrite план (tracking прогресса)
-□ Определить checkpoint (куда откатываться)
+□ Create/check folder projects/[workflow-name]/
+□ Read projects/[workflow-name]/PROJECT_STATE.md (or create)
+□ Read LEARNINGS.md Quick Index (know what was solved before)
+□ Check n8n_workflow_versions (know versions)
+□ Create TodoWrite plan (progress tracking)
+□ Determine checkpoint (for rollback)
 ```
 
-### При продолжении прерванной работы
+### When continuing interrupted work
 
 ```
-□ Проверить TodoWrite (что было в процессе)
-□ Проверить последние изменения в workflow
-□ Сверить версию в n8n с ожидаемой
-□ Продолжить с места остановки или начать заново
+□ Read projects/[workflow-name]/PROJECT_STATE.md
+□ Check TodoWrite (what was in progress)
+□ Check latest workflow changes
+□ Verify n8n version matches expected
+□ Continue from last point or restart
 ```
 
 ---
