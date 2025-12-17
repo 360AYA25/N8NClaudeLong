@@ -442,3 +442,289 @@ n8n_update_partial_workflow({
 20. **n8n-nodes-base.executeWorkflowTrigger** - Sub-workflow calls
 
 **Note:** LangChain nodes use the `@n8n/n8n-nodes-langchain.` prefix, core nodes use `n8n-nodes-base.`
+
+---
+
+## Anti-Loop Protocol
+
+### Принцип
+**Одна и та же ошибка 2+ раза = СТОП и анализ**
+
+### Перед КАЖДОЙ попыткой исправления
+
+**Шаг 1: Проверить LEARNINGS.md**
+```javascript
+Grep({pattern: "ключевые слова ошибки", path: "LEARNINGS.md"})
+```
+Если найдено → применить известное решение
+
+**Шаг 2: Сохранить checkpoint**
+```javascript
+n8n_workflow_versions({mode: "list", workflowId: "ID", limit: 1})
+// Запомнить version ID как точку отката
+```
+
+**Шаг 3: Записать что пробую**
+```javascript
+TodoWrite([
+  {content: "Checkpoint: v#X", status: "completed", activeForm: "Saved"},
+  {content: "Попытка 1: [описание]", status: "in_progress", activeForm: "Trying..."}
+])
+```
+
+### Context Injection (ОБЯЗАТЕЛЬНО на попытке 2+)
+
+Перед повторной попыткой ВСЕГДА включать в размышления:
+
+```
+⚠️ ALREADY TRIED (не повторять!):
+- Попытка 1: [что делал] → [результат/ошибка]
+- Попытка 2: [что делал] → [результат/ошибка]
+
+→ Нужен ПРИНЦИПИАЛЬНО ДРУГОЙ подход!
+```
+
+### Cycle Limits (Hard Cap)
+
+| Попытка | Действие | Обоснование |
+|---------|----------|-------------|
+| 1-2 | Прямые фиксы | Нормальный trial-and-error |
+| 3 | **СТОП!** Проверить LEARNINGS.md | Возможно уже решал |
+| 4-5 | Искать альтернативный подход | Очевидные решения исчерпаны |
+| 6+ | **Спросить пользователя** | Hard cap - нужна помощь |
+
+### При достижении лимита (попытка 6+)
+
+```markdown
+🚨 **CYCLE LIMIT REACHED**
+
+Сделано 5+ попыток без успеха.
+
+**Что пробовал:**
+1. [описание] → [результат]
+2. [описание] → [результат]
+...
+
+**Варианты:**
+1. Rollback к версии #X (последняя рабочая)
+2. Попробовать совершенно другой подход: [описание]
+3. Нужна твоя помощь с [конкретный вопрос]
+
+Что выбираешь?
+```
+
+### После решения проблемы (ОБЯЗАТЕЛЬНО)
+
+```javascript
+// 1. Записать в LEARNINGS.md
+Edit("LEARNINGS.md", добавить новую запись в нужную категорию)
+
+// 2. Обновить Quick Index если новая категория
+// 3. Очистить TodoWrite
+```
+
+### Rollback Protocol
+
+```javascript
+// Если нужен откат:
+n8n_workflow_versions({
+  mode: "rollback",
+  workflowId: "ID",
+  versionId: CHECKPOINT_VERSION  // или без versionId для последней
+})
+// Автоматически создаёт backup перед откатом!
+```
+
+---
+
+## Debug Session Protocol
+
+### Начало debug-сессии
+
+**Шаг 1: Сохранить checkpoint**
+```javascript
+n8n_workflow_versions({mode: "list", workflowId: "ID", limit: 3})
+// Запомнить: "Checkpoint: version #X"
+TodoWrite([{content: "Checkpoint: v#X", status: "completed", activeForm: "Saved"}])
+```
+
+**Шаг 2: Проверить LEARNINGS.md**
+```javascript
+Grep({pattern: "ключевые слова", path: "LEARNINGS.md", output_mode: "content"})
+```
+
+**Шаг 3: Составить план**
+```javascript
+TodoWrite([
+  {content: "Checkpoint saved: v#X", status: "completed", activeForm: "..."},
+  {content: "Diagnose: [описание]", status: "in_progress", activeForm: "Diagnosing..."},
+  {content: "Fix: [план]", status: "pending", activeForm: "Fixing..."},
+  {content: "Validate", status: "pending", activeForm: "Validating..."}
+])
+```
+
+### Во время debug-сессии
+
+**После КАЖДОГО изменения:**
+```javascript
+// 1. Валидация узла
+validate_node({nodeType: "...", config: {...}, mode: "full"})
+
+// 2. Валидация workflow
+validate_workflow({workflow: {...}})
+
+// 3. Проверка в n8n (если задеплоено)
+n8n_validate_workflow({id: "..."})
+```
+
+**Если ошибка повторяется:**
+```
+Попытка 1: ❌ → записать что не сработало
+Попытка 2: ❌ → записать, сравнить с попыткой 1
+Попытка 3: ❌ → СТОП! Grep LEARNINGS.md, искать альтернативу
+```
+
+### Изоляция изменений
+
+**Правило: Менять ОДИН узел за раз**
+
+```javascript
+// ❌ ПЛОХО: несколько изменений сразу
+operations: [
+  {type: "updateNode", nodeId: "node1", changes: {...}},
+  {type: "updateNode", nodeId: "node2", changes: {...}},
+  {type: "addConnection", ...}
+]
+
+// ✅ ХОРОШО: по одному, с валидацией между
+// Шаг 1
+operations: [{type: "updateNode", nodeId: "node1", changes: {...}}]
+// validate...
+// Шаг 2
+operations: [{type: "updateNode", nodeId: "node2", changes: {...}}]
+// validate...
+```
+
+### Execution Analysis (L-067)
+
+**Для workflow >10 nodes или с binary data:**
+```javascript
+// STEP 1: Overview (find WHERE) - safe
+n8n_executions({action: "get", id: "...", mode: "summary"})
+
+// STEP 2: Details (find WHY) - targeted
+n8n_executions({
+  action: "get", id: "...",
+  mode: "filtered",
+  nodeNames: ["problem_node", "before_node"],
+  itemsLimit: -1
+})
+```
+
+**Decision tree:**
+- >10 nodes OR binary → Two-step approach
+- ≤10 nodes, no binary → mode="full" safe
+
+### Завершение debug-сессии
+
+**При успехе:**
+```javascript
+// 1. Финальная валидация
+n8n_validate_workflow({id: "..."})
+
+// 2. Записать решение в LEARNINGS.md
+Edit("LEARNINGS.md", добавить запись)
+
+// 3. Очистить TodoWrite
+TodoWrite([{content: "Debug complete", status: "completed", activeForm: "Done"}])
+```
+
+**При неудаче (cycle limit):**
+```javascript
+// 1. Предложить rollback
+n8n_workflow_versions({mode: "rollback", workflowId: "ID"})
+
+// 2. Записать что НЕ сработало в LEARNINGS.md
+Edit("LEARNINGS.md", добавить "Tried but failed")
+
+// 3. Спросить пользователя
+```
+
+---
+
+## Session Start Checklist
+
+### При начале работы над workflow
+
+```
+□ Прочитать LEARNINGS.md Quick Index (знать что уже решал)
+□ Проверить n8n_workflow_versions (знать версии)
+□ Создать TodoWrite план (tracking прогресса)
+□ Определить checkpoint (куда откатываться)
+```
+
+### При продолжении прерванной работы
+
+```
+□ Проверить TodoWrite (что было в процессе)
+□ Проверить последние изменения в workflow
+□ Сверить версию в n8n с ожидаемой
+□ Продолжить с места остановки или начать заново
+```
+
+---
+
+## Critical Node Configurations (Quick Reference)
+
+### Set Node v3.4+
+```javascript
+{
+  "mode": "manual",  // MANDATORY
+  "assignments": {
+    "assignments": [{
+      "value": "={{ $json.field }}"  // ={{ prefix!
+    }]
+  }
+}
+```
+
+### IF Node v2+
+```javascript
+{
+  "conditions": {
+    "conditions": [...]  // Array, not object!
+  }
+}
+```
+
+### HTTP Request Error Handling
+```javascript
+{
+  "continueOnFail": true  // Node level, not in options!
+}
+```
+
+### addConnection (4 params + branch for IF)
+```javascript
+{type: "addConnection", source: "IF", target: "Success",
+ sourcePort: "main", targetPort: "main", branch: "true"}
+```
+
+### Code Node Data Access
+```javascript
+const data = $node['Node Name'].json.field;
+// OR
+const data = $('Node Name').item.json.field;
+```
+
+### Telegram Reply Keyboard (use HTTP Request!)
+```javascript
+{
+  "method": "POST",
+  "url": "https://api.telegram.org/bot<TOKEN>/sendMessage",
+  "jsonBody": "={{ JSON.stringify({
+    chat_id: ...,
+    reply_markup: { keyboard: [[{text: 'Button'}]] }
+  }) }}"
+}
+```
