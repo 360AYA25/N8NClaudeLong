@@ -2,6 +2,47 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 2025-12-17
+
+### Added
+- **Indexed Learning System** - Complete redesign of knowledge management
+  - `learning/INDEX.md` - Index with line numbers (185 lines, ~500 tokens)
+  - `learning/LEARNINGS.md` - All knowledge in one file (1,326 lines, all English)
+  - `learning/N8N-RESOURCES.md` - External resources
+  - `learning/archive/` - Backup of old files
+- **L-009** - AI Agent tool optional parameters need nullable types (toolHttpRequest)
+- Learning System section in CLAUDE.md with read/write protocols
+- Quick access by line numbers (e.g., Switch Node → Line 517)
+- Documentation: LEARNING_SYSTEM_SIMPLE.md and LEARNING_SYSTEM_IMPLEMENTATION.md
+
+### Changed
+- All learning system instructions now in English
+- Moved from multiple files to single indexed file approach
+- Updated all CLAUDE.md references: LEARNINGS.md → learning/INDEX.md
+- Anti-Loop Protocol now uses learning/INDEX.md
+- Debug Session Protocol now uses learning/INDEX.md
+
+### Removed
+- `/LEARNINGS.md` (root) - Merged into learning/LEARNINGS.md
+- Agent-specific knowledge (~60% of old content):
+  - Agent Standardization
+  - L-105 to L-096 (Orchestrator, Builder, QA processes)
+  - Phase 5, validation gates, escalation protocols
+  - Git & GitHub agent-specific content
+
+### Performance
+- **99.7% token reduction**: 900 tokens per query vs 330K full files
+- Read protocol: INDEX (500 tokens) + targeted section (400 tokens) = 900 tokens
+- Write protocol: Add entries at TOP of categories (newest first)
+
+### Technical Details
+- **Sources merged**: Current LEARNINGS.md + filtered OLD file + n8n patterns
+- **Filtering**: Removed Orchestrator, Builder, QA, Phase 5, agent processes
+- **Structure**: One file + index with line numbers for targeted reads
+- **Format**: All entries with Problem/Solution/Prevention/Tags structure
+
+---
+
 ## [1.2.0] - 2025-12-17
 
 ### 📁 Project Organization System
