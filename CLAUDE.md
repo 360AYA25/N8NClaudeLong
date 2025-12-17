@@ -14,8 +14,36 @@ When operations are independent, execute them in parallel for maximum performanc
 ✅ GOOD: Call search_nodes, list_nodes, and search_templates simultaneously
 ❌ BAD: Sequential tool calls (await each one before the next)
 
-### 3. Templates First
-ALWAYS check templates before building from scratch (2,709 available).
+### 3. Templates First - MANDATORY SEARCH STRATEGY
+
+⚠️ CRITICAL: NEVER build from scratch without trying AT LEAST 3 different template searches in parallel.
+
+**REQUIRED search strategy (execute ALL in parallel):**
+
+```javascript
+// Block 1 - ОБЯЗАТЕЛЬНО выполнить параллельно (минимум 3 поиска)
+search_templates({searchMode: 'keyword', query: 'user request keywords', limit: 20})
+search_templates({searchMode: 'by_task', task: 'most_relevant_task'})
+search_templates({searchMode: 'by_metadata', complexity: 'simple'})
+
+// Block 2 - Если Block 1 вернул 0 результатов, выполнить еще 3 поиска параллельно:
+search_templates({query: 'alternative broader terms', limit: 30})
+search_templates({searchMode: 'by_nodes', nodeTypes: ['main-node-types']})
+search_templates({searchMode: 'by_metadata', maxSetupMinutes: 60})
+```
+
+**Available task types (ALWAYS try relevant ones):**
+- `ai_automation`, `data_sync`, `webhook_processing`, `email_automation`
+- `slack_integration`, `data_transformation`, `file_processing`
+- `scheduling`, `api_integration`, `database_operations`
+
+**Search hierarchy:**
+1. **FIRST** - Parallel search Block 1 (3+ strategies simultaneously)
+2. **IF 0 results** - Parallel search Block 2 (broader terms, different filters)
+3. **IF still 0** - Search by individual node types from user request
+4. **ONLY THEN** - Build from scratch + explain why no templates matched
+
+**Rule:** If you build from scratch, you MUST explain in response why NO template matched after trying multiple parallel searches.
 
 ### 4. Multi-Level Validation
 Use validate_node(mode='minimal') → validate_node(mode='full') → validate_workflow pattern.
@@ -24,21 +52,65 @@ Use validate_node(mode='minimal') → validate_node(mode='full') → validate_wo
 ⚠️ CRITICAL: Default parameter values are the #1 source of runtime failures.
 ALWAYS explicitly configure ALL parameters that control node behavior.
 
+### 6. Task Tracking - MANDATORY
+
+⚠️ CRITICAL: For multi-step tasks (3+ steps), ALWAYS use TodoWrite to track progress.
+
+**When to use TodoWrite:**
+- Creating workflows (template search → node discovery → configuration → validation → deployment)
+- Debugging issues (reproduce → identify → fix → validate → test)
+- Adding features (plan → implement → validate → test → deploy)
+- Any task with 3+ distinct steps
+
+**TodoWrite structure:**
+```javascript
+TodoWrite({
+  todos: [
+    {content: "Search for templates", status: "completed", activeForm: "Searching for templates"},
+    {content: "Configure nodes", status: "in_progress", activeForm: "Configuring nodes"},
+    {content: "Validate workflow", status: "pending", activeForm: "Validating workflow"},
+    {content: "Deploy to n8n", status: "pending", activeForm: "Deploying to n8n"}
+  ]
+})
+```
+
+**Rules:**
+- Mark tasks as `in_progress` BEFORE starting work
+- Mark as `completed` IMMEDIATELY after finishing (don't batch)
+- ONLY ONE task `in_progress` at a time
+- Update in real-time as you work
+
+**When NOT to use:** Single-step trivial tasks (e.g., "read one file", "run one command")
+
 ## Workflow Process
 
 1. **Start**: Call `tools_documentation()` for best practices
 
-2. **Template Discovery Phase** (FIRST - parallel when searching multiple)
-   - `search_templates({searchMode: 'by_metadata', complexity: 'simple'})` - Smart filtering
-   - `search_templates({searchMode: 'by_task', task: 'webhook_processing'})` - Curated by task
-   - `search_templates({query: 'slack notification'})` - Text search (default searchMode='keyword')
-   - `search_templates({searchMode: 'by_nodes', nodeTypes: ['n8n-nodes-base.slack']})` - By node type
+2. **Template Discovery Phase** (MANDATORY - ALWAYS execute 3+ parallel searches FIRST)
 
-   **Filtering strategies**:
+   ⚠️ **EXECUTE AT LEAST 3 SEARCHES IN PARALLEL BEFORE BUILDING:**
+
+   **[Parallel Block 1 - REQUIRED]**
+   ```javascript
+   search_templates({searchMode: 'keyword', query: 'user keywords', limit: 20})
+   search_templates({searchMode: 'by_task', task: 'relevant_task'})
+   search_templates({searchMode: 'by_metadata', complexity: 'simple'})
+   ```
+
+   **[Parallel Block 2 - If Block 1 returns 0 results]**
+   ```javascript
+   search_templates({query: 'alternative/broader terms', limit: 30})
+   search_templates({searchMode: 'by_nodes', nodeTypes: ['n8n-nodes-base.mainNode']})
+   search_templates({searchMode: 'by_metadata', maxSetupMinutes: 60})
+   ```
+
+   **Filtering strategies (use in searches above):**
    - Beginners: `complexity: "simple"` + `maxSetupMinutes: 30`
    - By role: `targetAudience: "marketers"` | `"developers"` | `"analysts"`
    - By time: `maxSetupMinutes: 15` for quick wins
    - By service: `requiredService: "openai"` for compatibility
+
+   **ONLY proceed to "Node Discovery" if ALL parallel searches return 0 results**
 
 3. **Node Discovery** (if no suitable template - parallel execution)
    - Think deeply about requirements. Ask clarifying questions if unclear.
@@ -327,9 +399,10 @@ n8n_update_partial_workflow({
 ### Core Behavior
 1. **Silent execution** - No commentary between tools
 2. **Parallel by default** - Execute independent operations simultaneously
-3. **Templates first** - Always check before building (2,709 available)
+3. **Templates first - MANDATORY** - Always execute 3+ parallel template searches before building (2,709 available)
 4. **Multi-level validation** - Quick check → Full validation → Workflow validation
 5. **Never trust defaults** - Explicitly configure ALL parameters
+6. **Task tracking - MANDATORY** - Use TodoWrite for all multi-step tasks (3+ steps)
 
 ### Attribution & Credits
 - **MANDATORY TEMPLATE ATTRIBUTION**: Share author name, username, and n8n.io link
