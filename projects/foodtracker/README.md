@@ -1,99 +1,98 @@
-# FoodTracker Project Folder
+# FoodTracker Project
 
-Quick navigation for this workflow project.
-
----
-
-## 📂 Files in This Folder
-
-### Core Files
-- **PROJECT_STATE.md** - Current workflow state, what works, what doesn't
-- **NAVIGATION.md** - ⭐ Where everything is (MultiBOT vs N8NClaudeLong)
-- **SESSION_BRIEF.md** - 📋 Copy-paste this to new Claude session
-- **debug_log.md** - 🐛 Track debugging attempts (Anti-Loop Protocol)
-
-### Testing
-- **TESTING_CHECKLIST.md** - 18 test cases for Task 2.6.5
+**Workflow ID:** sw3Qs3Fe3JahEbbW
+**Nodes:** 56 | **Status:** Production
 
 ---
 
-## 🚀 Quick Start
+## Files (Read-Before / Update-After Pattern)
 
-### Starting New Session
+### Critical Documentation
 
-```bash
-# 1. Pass this to new Claude:
-Read projects/foodtracker/SESSION_BRIEF.md
+| File | Read BEFORE | Update AFTER confirmed |
+|------|-------------|------------------------|
+| **SUPABASE_SCHEMA.md** | DB/RPC changes | Schema changes |
+| **AI_PROMPT.md** | AI Agent changes | Prompt changes |
+| **ARCHITECTURE.md** | Workflow structure | Structure changes |
 
-# 2. Claude will read:
-# - NAVIGATION.md (where things are)
-# - PROJECT_STATE.md (current state)
-# - TESTING_CHECKLIST.md (what to test)
-# - debug_log.md (what was tried)
+### State & Tracking
+
+| File | Purpose |
+|------|---------|
+| **PROJECT_STATE.md** | Current state, what works/doesn't |
+| **debug_log.md** | Debug attempts (Anti-Loop) |
+| **POST_MORTEM.md** | Analysis of past issues |
+
+### Session Files
+
+| File | Purpose |
+|------|---------|
+| **SESSION_BRIEF.md** | Copy to new Claude session |
+| **NAVIGATION.md** | Where everything is |
+| **TESTING_CHECKLIST.md** | Test cases |
+| **COMMAND_STATUS.md** | Command implementation status |
+
+---
+
+## Quick Start
+
+### New Session
+```javascript
+// 1. State
+Read("projects/foodtracker/PROJECT_STATE.md")
+
+// 2. Knowledge base
+Read("learning/INDEX.md")  // Find relevant section
+Read("learning/LEARNINGS.md", {offset: LINE, limit: 50})
+
+// 3. Workflow versions
+n8n_workflow_versions({mode: "list", workflowId: "sw3Qs3Fe3JahEbbW", limit: 3})
 ```
 
-### During Work
+### Before Changes
+```javascript
+// DB/Tool changes
+Read("projects/foodtracker/SUPABASE_SCHEMA.md")
+Read("projects/foodtracker/ARCHITECTURE.md")
 
-```bash
-# Check current state
-Read projects/foodtracker/PROJECT_STATE.md
+// AI Agent changes
+Read("projects/foodtracker/AI_PROMPT.md")
+```
 
-# Before debugging: check what was tried
-Read projects/foodtracker/debug_log.md
+### During Debug
+```javascript
+// Check what was tried
+Read("projects/foodtracker/debug_log.md")
 
-# Track attempts (avoid loops)
-Edit projects/foodtracker/debug_log.md
-
-# Update test results
-Edit projects/foodtracker/TESTING_CHECKLIST.md
+// Record attempts (Anti-Loop)
+Edit("projects/foodtracker/debug_log.md", ...)
 ```
 
 ---
 
-## 🔗 External Resources
+## Shared Knowledge
 
-### Main Project
+```
+~/Projects/N8NClaudeLong/
+├── CLAUDE.md                    # Main prompt + protocols
+├── learning/
+│   ├── INDEX.md                 # Quick lookup (~500 tokens)
+│   └── LEARNINGS.md             # Full knowledge (1,500+ lines)
+└── Docs/
+    └── SESSION_INIT_GUIDE.md    # How to start sessions
+```
+
+---
+
+## External Resources
+
 ```
 ~/Projects/MultiBOT/bots/food-tracker/
 ├── TODO.md              # Master task list
-├── PLAN.md              # 6.5-week plan
+├── PLAN.md              # Development plan
 └── tasks/               # Detailed specs
 ```
 
-### Shared Knowledge
-```
-~/Projects/N8NClaudeLong/
-├── CLAUDE.md            # Instructions for Claude
-└── LEARNINGS.md         # Shared learnings
-```
-
 ---
 
-## 📋 Current Task
-
-**Task 2.6.5 - Advanced Features & UX Testing**
-
-**Status:** Implementation complete, testing in progress
-
-**Features to Test:**
-1. Timezone Management
-2. Monthly Report `/month`
-3. Interactive Reports
-4. Meal Management
-5. Welcome Flow `/welcome`
-
-See `TESTING_CHECKLIST.md` for details.
-
----
-
-## 🎯 Workflow Info
-
-- **ID:** sw3Qs3Fe3JahEbbW
-- **URL:** https://n8n.srv1068954.hstgr.cloud/workflow/sw3Qs3Fe3JahEbbW
-- **Version:** v288+
-- **Nodes:** 56
-
----
-
-**Last Updated:** 2025-12-17
-**Next:** Start testing in Telegram
+*Last Updated: 2025-12-22*
