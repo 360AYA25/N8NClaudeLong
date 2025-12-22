@@ -2,6 +2,61 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.8.0] - 2025-12-22
+
+### Project-Specific Database Schema System
+
+**Problem:** Claude didn't have access to project-specific database schema when working on workflow changes. This caused errors when modifying tools/RPC functions without knowing actual DB structure.
+
+**Solution:** Added mandatory schema verification workflow with project-specific documentation.
+
+### Added
+
+**New File:**
+- `projects/foodtracker/SUPABASE_SCHEMA.md` - Complete database schema
+  - All 9 tables with columns, types, defaults
+  - Foreign key relationships diagram
+  - RLS security model
+  - All RPC functions with signatures
+  - Workflow data flow diagram
+
+**New Rules in CLAUDE.md:**
+- **Workflow Modification Rule** - 5 steps BEFORE + update rules AFTER
+- **Pre-Deploy Checklist** - Added "Dependencies" check with schema reference
+- Schema updates ONLY after fix is CONFIRMED working
+
+### Changed
+
+- **CLAUDE.md Pre-Deploy Checklist:**
+  - Added Dependencies row: `Read(SUPABASE_SCHEMA.md)` + `ARCHITECTURE.md`
+  - Schema check now references specific file
+
+- **projects/foodtracker/ARCHITECTURE.md:**
+  - Added SUPABASE_SCHEMA.md to Related Files (first position)
+
+### Workflow Modification Rule
+
+```
+BEFORE adding/changing Tool or Command:
+1. Read SUPABASE_SCHEMA.md - полная схема БД
+2. Read ARCHITECTURE.md - связи workflow
+3. Check RPC functions table
+4. Verify table + columns exist
+5. Check what depends on it
+
+AFTER fix CONFIRMED:
+- Update SUPABASE_SCHEMA.md if DB changed
+- Update ARCHITECTURE.md if workflow changed
+```
+
+### Impact
+
+- **Prevents schema mismatch errors** - Claude verifies DB structure before changes
+- **Single source of truth** - One file per project with complete schema
+- **Update discipline** - Schema docs only updated after verified fixes
+
+---
+
 ## [1.7.0] - 2025-12-22
 
 ### ⚠️ MAJOR: CLAUDE.md Token Optimization (47% reduction)

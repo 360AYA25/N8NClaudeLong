@@ -266,6 +266,7 @@ const isWelcomeCommand = userMessage === '/welcome';  // ONLY first message!
 
 ## Related Files
 
+- [SUPABASE_SCHEMA.md](SUPABASE_SCHEMA.md) - **Full database schema** (tables, RPC, RLS)
 - [AI_PROMPT.md](AI_PROMPT.md) - Full AI prompt with WHY annotations
 - [PROJECT_STATE.md](PROJECT_STATE.md) - Current state and history
 - [POST_MORTEM.md](POST_MORTEM.md) - Analysis of 18-cycle debugging

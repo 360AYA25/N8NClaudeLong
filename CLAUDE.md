@@ -286,11 +286,25 @@ FoodTracker `/welcome` took 18 cycles over 2 days because:
 
 | Check | When | Action |
 |-------|------|--------|
-| Schema | DB changes | Verify columns exist + types match + test RPC |
+| **Dependencies** | Tool/Command add/change | `Read(projects/[name]/SUPABASE_SCHEMA.md)` + `ARCHITECTURE.md` |
+| Schema | DB changes | Verify in `SUPABASE_SCHEMA.md`: columns exist + types match + test RPC |
 | Data Flow | Workflow changes | Map ALL execution paths through changed node |
 | E2E | Always | Trace full user journey start→finish |
 | Cascade | Always | List touched components, verify each works |
 | Learnings | Always | `Read(learning/INDEX.md)` → relevant section |
+
+### Workflow Modification Rule
+
+**BEFORE adding/changing Tool or Command:**
+1. `Read(projects/[name]/SUPABASE_SCHEMA.md)` - полная схема БД
+2. `Read(projects/[name]/ARCHITECTURE.md)` - связи workflow
+3. Check RPC functions table in schema
+4. If new RPC needed → verify table + columns exist
+5. If modifying existing → check what depends on it
+
+**AFTER fix is CONFIRMED working:**
+- Update `SUPABASE_SCHEMA.md` if DB changed (new table/column/RPC)
+- Update `ARCHITECTURE.md` if workflow structure changed
 
 ### Anti-Cascade Rules
 
