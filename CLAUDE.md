@@ -287,6 +287,7 @@ FoodTracker `/welcome` took 18 cycles over 2 days because:
 | Check | When | Action |
 |-------|------|--------|
 | **Dependencies** | Tool/Command add/change | `Read(projects/[name]/SUPABASE_SCHEMA.md)` + `ARCHITECTURE.md` |
+| **AI Prompt** | Prompt changes | `Read(projects/[name]/AI_PROMPT.md)` - check WHY annotations |
 | Schema | DB changes | Verify in `SUPABASE_SCHEMA.md`: columns exist + types match + test RPC |
 | Data Flow | Workflow changes | Map ALL execution paths through changed node |
 | E2E | Always | Trace full user journey start→finish |
@@ -298,13 +299,15 @@ FoodTracker `/welcome` took 18 cycles over 2 days because:
 **BEFORE adding/changing Tool or Command:**
 1. `Read(projects/[name]/SUPABASE_SCHEMA.md)` - полная схема БД
 2. `Read(projects/[name]/ARCHITECTURE.md)` - связи workflow
-3. Check RPC functions table in schema
-4. If new RPC needed → verify table + columns exist
-5. If modifying existing → check what depends on it
+3. `Read(projects/[name]/AI_PROMPT.md)` - если меняется AI Agent prompt
+4. Check RPC functions table in schema
+5. If new RPC needed → verify table + columns exist
+6. If modifying existing → check what depends on it
 
 **AFTER fix is CONFIRMED working:**
 - Update `SUPABASE_SCHEMA.md` if DB changed (new table/column/RPC)
 - Update `ARCHITECTURE.md` if workflow structure changed
+- Update `AI_PROMPT.md` if AI Agent prompt changed (with WHY annotations)
 
 ### Anti-Cascade Rules
 

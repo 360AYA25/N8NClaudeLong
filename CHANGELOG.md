@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.9.0] - 2025-12-22
+
+### AI Prompt Documentation System
+
+**Problem:** AI Agent prompts were modified without understanding WHY each section exists, leading to cascading errors and broken tool calls.
+
+**Solution:** Added AI_PROMPT.md to mandatory read/update workflow alongside SUPABASE_SCHEMA.md.
+
+### Added
+
+**New Rules in CLAUDE.md:**
+- **AI_PROMPT.md to Workflow Modification Rule** - Read before AI Agent changes
+- **AI_PROMPT.md to Pre-Deploy Checklist** - Check WHY annotations
+- Same read-before/update-after pattern as SUPABASE_SCHEMA.md
+
+### Changed
+
+- **Docs/SESSION_INIT_GUIDE.md** - Complete rewrite:
+  - Added Learning System section (INDEX.md + LEARNINGS.md)
+  - Added SUPABASE_SCHEMA.md verification step
+  - Added AI_PROMPT.md verification step
+  - Added "Key Documentation Files" table (when to read/update)
+  - Updated Quick Commands with new workflow
+  - Added file structure diagram with all current files
+
+### Documentation Files Pattern
+
+| File | Read Before | Update After Confirmed |
+|------|-------------|------------------------|
+| SUPABASE_SCHEMA.md | DB changes | DB schema changes |
+| AI_PROMPT.md | AI Agent changes | Prompt changes |
+| ARCHITECTURE.md | Workflow structure | Structure changes |
+
+---
+
 ## [1.8.0] - 2025-12-22
 
 ### Project-Specific Database Schema System
