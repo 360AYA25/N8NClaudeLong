@@ -445,6 +445,146 @@ n8n_update_partial_workflow({
 
 ---
 
+## Debug Quality Gates (POST-MORTEM LESSON)
+
+⚠️ **MANDATORY BEFORE ANY DEPLOY** - Learned from 18-cycle debug disaster
+
+### Why This Exists
+FoodTracker `/welcome` took 18 cycles over 2 days because:
+- 11 cycles caused by cascading fixes
+- No E2E testing before deploy
+- No schema verification
+- No LEARNINGS.md consultation
+
+### Pre-Deploy Checklist
+
+**BEFORE saying "готово, проверяй" or deploying ANY change:**
+
+#### 1. Schema Verification (for DB changes)
+```sql
+-- MANDATORY before ANY migration:
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_name = 'target_table';
+```
+- ✅ Verified all column names exist
+- ✅ Verified column types match
+- ✅ Tested RPC function manually in SQL Editor
+
+#### 2. Data Flow Tracing (for workflow changes)
+Map ALL execution paths through the node you're changing:
+```
+| Switch Output | Node Path | Output Field | Covered? |
+|---------------|-----------|--------------|----------|
+| 0 (Voice) | Whisper | transcription | ✅ |
+| 1 (Photo) | Vision | product_name | ✅ |
+| 2-9 (Commands) | Week Calc | command | ✅ |
+| 10 (Text) | Process Text | data | ✅ |
+```
+
+#### 3. E2E Flow Simulation
+- ✅ Traced full user journey (start → finish)
+- ✅ Identified ALL states (first message, answers, confirmation)
+- ✅ Verified each state mentally or manually
+
+#### 4. Cascading Impact Check
+- ✅ Listed all components touched
+- ✅ Verified each still works
+- ✅ Tested integration points
+
+#### 5. LEARNINGS.md Consultation
+```javascript
+Read("learning/INDEX.md")  // Find relevant category
+Grep({pattern: "keyword", path: "learning/LEARNINGS.md"})
+```
+
+### Anti-Cascade Rules
+
+**NEVER use broad override language in prompts:**
+
+❌ BAD:
+- "COMPLETELY IGNORE all context"
+- "ALWAYS OVERRIDE everything"
+- "DISABLE ALL checks"
+
+✅ GOOD:
+```markdown
+IGNORE: user_goals, user_profile (OLD database values)
+ALWAYS USE: telegram_user_id (REQUIRED for tool call)
+REASON: Input context contains stale data during /welcome flow
+```
+
+### Incremental Change Protocol
+
+**When fixing complex issues:**
+1. Change ONE thing
+2. Verify it works
+3. Document what changed
+4. Then change next thing
+
+**NEVER:** Apply multiple fixes at once hoping they all work
+
+### User Communication Template
+
+**Instead of:** "готово, проверяй"
+
+**Use:**
+```
+Применил fix для [конкретная проблема].
+
+**Что исправлено:**
+- [конкретное изменение]
+
+**Что проверил:**
+- [x] Schema matches (if DB change)
+- [x] All data paths covered (if workflow change)
+- [x] E2E flow simulated
+
+**Ожидаемое поведение:**
+1. [step 1]
+2. [step 2]
+3. [expected result]
+
+**Если что-то не так, скажи:**
+- На каком шаге
+- Что увидел
+- Скриншот если есть
+```
+
+### Debug Cycle Hard Limits
+
+| Cycles | Action Required |
+|--------|-----------------|
+| 1-2 | Normal debugging |
+| 3 | **STOP!** Read LEARNINGS.md |
+| 4-5 | Try fundamentally different approach |
+| 6+ | **Ask user for help OR rollback** |
+
+**Cascade Detection:**
+If your fix CREATES a new bug:
+1. STOP immediately
+2. Revert to last working state
+3. Analyze WHY fix created bug
+4. Plan comprehensive fix (not incremental patches)
+
+### Rollback Triggers (MANDATORY)
+
+**Do rollback IMMEDIATELY if:**
+1. Cycle 3+ on same problem with no progress
+2. Fix created NEW critical bug (bot silent, data loss)
+3. Bot completely silent after deploy
+4. User reports regression in OTHER feature
+
+**Command:**
+```javascript
+n8n_workflow_versions({mode: "rollback", workflowId: "WORKFLOW_ID"})
+// Creates backup before rollback automatically!
+```
+
+**Reference:** [projects/foodtracker/POST_MORTEM.md](projects/foodtracker/POST_MORTEM.md)
+
+---
+
 ## Anti-Loop Protocol
 
 ### Принцип

@@ -2,6 +2,136 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.0] - 2025-12-22
+
+### Session State Architecture - Automatic Context Isolation
+
+**Problem:** Multi-step commands like `/welcome` suffered from input context pollution. Inject Context only detected `/welcome` on the FIRST message. When user answered "да" (confirmation), old database values leaked through, confusing the AI.
+
+**Solution:** Implemented automatic session state tracking in Supabase + workflow.
+
+### Added
+
+**Database (Supabase):**
+- `user_sessions` table - tracks active commands per user
+- `get_user_session()` RPC - retrieves session with auto-cleanup
+- `start_user_session()` RPC - creates/updates session on command start
+- `end_user_session()` RPC - clears session on completion
+- Auto-expiry after 1 hour
+
+**Workflow Changes:**
+- **Inject Context** - Now calls session RPC to detect active commands
+  - If session exists → excludes old database values automatically
+  - If new command (`/`) → starts new session
+  - Works for ANY command, not just `/welcome`
+
+**Documentation:**
+- `projects/foodtracker/AI_PROMPT.md` - AI prompt with WHY annotations
+- `projects/foodtracker/ARCHITECTURE.md` - Node→RPC→Database mapping
+
+### Changed
+
+- **AI Agent Prompt:** 13K → 5K characters (62% reduction)
+  - Removed MEMORY OVERRIDE section (no longer needed)
+  - Removed INPUT CONTEXT OVERRIDE section (handled by session state)
+  - Added simple "Session Mode Detection" section
+- **ARCHITECTURE.md:** Updated PROPOSAL section to IMPLEMENTED
+
+### Technical Details
+
+**Session State Flow:**
+```
+1. User: /welcome
+   → start_user_session(telegram_id, '/welcome')
+   → Output: {telegram_user_id, session_mode: '/welcome'}
+
+2. User: "Сергей" (answer)
+   → get_user_session() returns active session
+   → Output: {telegram_user_id, session_mode: '/welcome'}
+   → NO old database values passed
+
+3. User: "да" (confirm)
+   → Session still active
+   → AI saves data successfully
+   → Session auto-expires in 1 hour
+```
+
+### Impact
+
+- **Eliminates prompt workarounds** - No more "COMPLETELY IGNORE" hacks
+- **Works for all commands** - Not just `/welcome`
+- **Smaller prompt** - 62% reduction in AI prompt size
+- **Automatic cleanup** - Sessions expire after 1 hour
+
+**Source:** FoodTracker Technical Debt P1 implementation
+
+---
+
+## [1.4.0] - 2025-12-22
+
+### 🔍 Post-Mortem Analysis: Debug Quality Gates
+
+**Problem:** FoodTracker `/welcome` command took 18 debugging cycles over 2 days due to systemic process failures, not technical complexity.
+
+**Root Causes Identified:**
+- 61% of cycles: Cascading fixes (each fix created new bug)
+- 22% of cycles: No E2E testing before deploy
+- 11% of cycles: No schema verification before migrations
+- 6% of cycles: No LEARNINGS.md consultation
+
+**Solution:** Implemented comprehensive Debug Quality Gates system.
+
+### Added
+
+**New Section in CLAUDE.md: Debug Quality Gates**
+- Pre-Deploy Checklist (5 mandatory checks before any deploy)
+- Anti-Cascade Rules (never use "COMPLETELY IGNORE" without exceptions)
+- Incremental Change Protocol (one change at a time)
+- User Communication Template (structured deploy message)
+- Debug Cycle Hard Limits (rollback at cycle 6+)
+- Rollback Triggers (4 mandatory rollback conditions)
+
+**New Learnings:**
+- **L-105:** Never Use "COMPLETELY IGNORE" in AI Prompts
+  - Broad override instructions cause AI to ignore required data
+  - Always specify explicit exceptions for required fields
+  - Impact: CRITICAL
+- **L-104:** Debug Quality Gates Prevent Cascading Fixes
+  - Pre-deploy checklist can reduce debug cycles by 60%+
+  - Schema verification, data flow mapping, E2E simulation
+  - Impact: HIGH
+
+**New Documentation:**
+- `projects/foodtracker/POST_MORTEM.md` - Complete analysis of 18-cycle disaster
+  - Timeline analysis (all 18 cycles documented)
+  - Pattern analysis (5 systemic problems identified)
+  - Technical debt section (4 unresolved issues)
+  - Priority matrix for future improvements
+
+### Changed
+
+- **CLAUDE.md:** Added 100+ lines of Debug Quality Gates section
+- **learning/INDEX.md:** Added L-104, L-105 entries, updated statistics (53+ entries, 13 critical issues)
+- **learning/LEARNINGS.md:** Added 80+ lines for L-104, L-105 entries
+
+### Technical Debt Identified
+
+| Issue | Impact | Effort | Priority |
+|-------|--------|--------|----------|
+| Session State Architecture | HIGH | 4h | P1 |
+| E2E Test Script | HIGH | 6h | P1 |
+| Health Check Monitoring | MEDIUM | 2h | P2 |
+
+### Impact
+
+- **Minimum cycles possible:** 7 (vs 18 actual) = 60% reduction potential
+- **Time saved with quality gates:** ~6 hours per complex debugging session
+- **New anti-patterns documented:** "COMPLETELY IGNORE" in AI prompts
+
+**Source:** FoodTracker `/welcome` debugging session (Dec 19-20, 2025)
+
+---
+
 ## [1.3.0] - 2025-12-17
 
 ### Added

@@ -741,6 +741,202 @@ if ($json.message.voice) {
 
 ## AI Agent
 
+### [2025-12-22] L-105: Never Use "COMPLETELY IGNORE" in AI Prompts
+
+**Problem:** Broad override instructions cause AI to ignore required data
+**Context:** Prompted AI to "COMPLETELY IGNORE input context" during `/welcome` flow
+**Symptom:** AI ignored telegram_user_id (required field), passed null to tool
+
+**Examples of Failure:**
+```
+❌ "COMPLETELY IGNORE input context" → AI ignores telegram_user_id too
+❌ "COMPLETELY IGNORE conversation history" → AI forgets current session data
+❌ "ALWAYS OVERRIDE all values" → AI loses required identifiers
+```
+
+**Solution - Be Specific:**
+```markdown
+IGNORE: user_goals, user_profile (OLD database values)
+ALWAYS USE: telegram_user_id (REQUIRED for tool call)
+REASON: Input context contains stale data during /welcome flow
+```
+
+**Prevention:**
+1. NEVER use "COMPLETELY" or "ALL" in override instructions
+2. ALWAYS list explicit exceptions for required fields
+3. Explain WHY something should be ignored (helps AI understand intent)
+4. Test each override instruction independently
+
+**Impact:** CRITICAL - Causes cascading failures (see L-103)
+**Time to Fix:** 3 cycles when not following this rule
+**Tags:** #ai-agent #prompt-engineering #critical #anti-pattern
+**Reference:** FoodTracker Cycles 16-18
+
+---
+
+### [2025-12-22] L-104: Debug Quality Gates Prevent Cascading Fixes
+
+**Problem:** 18 cycles over 2 days to fix one feature (`/welcome`)
+**Root Cause:** No systematic verification before deploy
+
+**Breakdown of Wasted Cycles:**
+- 11 cycles (61%): Cascading fixes (each fix created new bug)
+- 4 cycles (22%): No E2E testing before deploy
+- 2 cycles (11%): No schema verification
+- 1 cycle (6%): No LEARNINGS.md check
+
+**Mandatory Pre-Deploy Checklist:**
+
+1. **Schema Verification** (for DB changes)
+   ```sql
+   SELECT column_name, data_type
+   FROM information_schema.columns
+   WHERE table_name = 'target_table';
+   ```
+
+2. **Data Flow Mapping** (for workflow changes)
+   - List ALL Switch outputs
+   - Map each to its output field name
+   - Verify extraction logic covers ALL
+
+3. **E2E Simulation**
+   - Trace full user journey (not just happy path)
+   - Identify ALL states (first message, intermediate, confirmation)
+   - Test each state mentally or manually
+
+4. **LEARNINGS.md Check**
+   - Search for related issues BEFORE debugging
+   - Apply known solutions/patterns
+
+**Cycle Limits:**
+| Cycles | Action |
+|--------|--------|
+| 3 | STOP! Read LEARNINGS.md |
+| 5 | Different approach |
+| 6+ | Ask user OR rollback |
+
+**Impact:** HIGH - Can reduce debug cycles by 60%+
+**Tags:** #debugging #process #quality-gates #critical #post-mortem
+**Reference:** [projects/foodtracker/POST_MORTEM.md](projects/foodtracker/POST_MORTEM.md)
+
+---
+
+### [2025-12-20 23:30] L-103: Cascading Context/Memory Overrides - Input Context Pollution
+
+**Problem:** AI bot looping questions during onboarding confirmation → forgot current session data → passed null for required field
+**Context:** Telegram bot `/welcome` onboarding with 11 questions, AI uses both conversation memory AND input context from database
+**Symptom:** Cascading failures across 3 cycles (16-18) when trying to fix context pollution
+
+**Investigation (3-cycle debugging):**
+
+**Cycle 16 - Initial Issue:** Input Context Pollution
+- User answered all 11 questions → confirmed with "да"
+- Bot went silent, then started looping old questions
+- Root cause: Inject Context node checks `/welcome` only on FIRST message
+- During confirmation ("да"), `isWelcomeCommand = false` → passes OLD database values
+- AI saw CONFLICTING data:
+  - Conversation memory: age 45, height 178, weight 67 (NEW from session)
+  - Input context: age 50, height 180, weight 80 (OLD from database)
+
+**Cycle 17 - Overly Aggressive Fix:** Memory Override
+- Fixed Cycle 16 by adding INPUT CONTEXT OVERRIDE: "COMPLETELY IGNORE input context"
+- NEW issue: AI showed "Имя: [не указано]" despite user answering "Сергец"
+- Root cause: Prompt said "COMPLETELY IGNORE all conversation history"
+- AI interpreted as: ignore EVERYTHING including current session data
+- Conversation memory showed AI collected "Сергец" but didn't use it in confirmation
+
+**Cycle 18 - Missing Exception:** telegram_user_id as null
+- Fixed Cycle 17 by refining MEMORY OVERRIDE (ignore PREVIOUS sessions, remember CURRENT)
+- NEW issue: Error "Expected number, received null at p_telegram_user_id"
+- Root cause: INPUT CONTEXT OVERRIDE said "COMPLETELY IGNORE input context"
+- AI ignored telegram_user_id (682776858) along with user_goals/user_profile
+- Tool call failed because telegram_user_id is REQUIRED (not optional)
+
+**Root Cause Chain:**
+1. **Source Problem:** Inject Context architecture passes OLD database values during multi-turn conversations
+2. **Fix Attempt 1:** Too broad - told AI to ignore ALL input context
+3. **Fix Attempt 2:** Too aggressive - told AI to ignore ALL conversation history
+4. **Final Fix:** Made explicit exception for REQUIRED field (telegram_user_id)
+
+**Solution (Final Working Prompt):**
+```markdown
+⚠️ INPUT CONTEXT OVERRIDE ⚠️
+
+CRITICAL: During /welcome session:
+
+✅ ALWAYS USE `telegram_user_id` from input context - this is the ONLY value you should take from input context during /welcome!
+❌ IGNORE user_goals and user_profile from input context - these are OLD database values, NOT current session data!
+
+Why? When you're in the middle of a /welcome conversation, the input context contains:
+- telegram_user_id: 682776858 ← USE THIS! (always correct)
+- user_goals/user_profile: age: 50, height: 180, etc. ← IGNORE THESE! (old database values)
+
+→ When calling Update User Onboarding tool:
+1. p_telegram_user_id → USE value from input context `telegram_user_id` (number)
+2. All other 11 parameters → USE data collected during THIS conversation session
+3. DO NOT use age/height/weight/etc. from input context user_goals/user_profile
+```
+
+**PLUS Refined Memory Override:**
+```markdown
+⚠️ CONVERSATION MEMORY OVERRIDE ⚠️
+
+CRITICAL RULE FOR /welcome COMMAND:
+When the user sends the `/welcome` command:
+
+❌ IGNORE all PREVIOUS /welcome sessions from conversation history (older attempts, incomplete sessions)
+✅ START FRESH - begin collecting data from question #1
+✅ REMEMBER all data collected during THIS CURRENT /welcome session (don't forget what user told you!)
+
+Example:
+- Previous session (3 days ago): name "John", age 30 → IGNORE (old session)
+- User sends `/welcome` → Start fresh
+- User answers "Mike" → REMEMBER "Mike" for THIS session
+- User answers age "25" → REMEMBER "25" for THIS session
+- When showing confirmation → Use "Mike" and "25" from THIS session
+```
+
+**Testing:**
+```
+User: /welcome
+AI: [11 questions collected correctly]
+  - Name: Сергей, Age: 45, Height: 167, Weight: 88, etc.
+AI: [Showed confirmation with emojis and calories: 1980 kcal]
+User: да
+Bot: ✅ Твой профиль сохранён! Теперь ты можешь отслеживать еду, воду и макросы.
+```
+
+**Detection Patterns:**
+1. **Input Context Pollution:** AI shows different values in confirmation than what user provided
+2. **Memory Override Too Aggressive:** AI shows "[не указано]" / "[not specified]" for data user just provided
+3. **Missing Exception:** Error "Expected [type], received null" for REQUIRED field that should come from input context
+
+**Prevention:**
+1. **Be Specific in Overrides:** Don't say "COMPLETELY IGNORE" - specify WHAT to ignore and WHAT to keep
+2. **Make Explicit Exceptions:** For REQUIRED fields from input context, state explicitly: "ALWAYS USE telegram_user_id"
+3. **Test Each Fix Independently:** Don't cascade multiple prompt changes in one update
+4. **Add to Mandatory Checklist:** Include explicit verification step in tool call section
+
+**Architecture Note:**
+The underlying issue is Inject Context node checking `/welcome` only once (first message). Better architectural fix would be:
+```javascript
+// Instead of:
+const isWelcomeCommand = userMessage.trim().toLowerCase() === '/welcome';
+
+// Better approach:
+const isWelcomeSession = sessionStore.get(userId)?.mode === 'welcome';
+// OR check AI conversation state marker
+```
+
+But prompt engineering workaround is acceptable when architecture change is complex.
+
+**Impact:** CRITICAL - Can cause cascading failures across multiple debugging cycles if not handled carefully
+**Time to Fix:** 3 cycles (4+ hours) due to cascading issues
+**Tags:** #ai-agent #prompt-engineering #context-pollution #memory #cascading-fixes #critical
+**Reference:** FoodTracker project, Cycles 16-18 (2025-12-20)
+
+---
+
 ### [2025-12-17 12:00] L-098: AI Memory caches data queries
 
 **Problem:** AI returns cached answer instead of calling tools

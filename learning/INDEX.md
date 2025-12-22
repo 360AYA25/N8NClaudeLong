@@ -34,7 +34,7 @@
 | **Code Node** | 560 | 3 | L-005 variables, L-060 deprecated syntax, regex escaping |
 | **HTTP Request** | 599 | 3 | continueOnFail, L-101 credentials, status codes |
 | **Telegram Bot** | 639 | 5 | L-100 Reply Keyboard (HTTP), L-097 fixedCollection, webhooks, message types |
-| **AI Agent** | 742 | 5 | L-098 memory caching, L-009 nullable types, tools, system prompt |
+| **AI Agent** | 742 | 8 | L-105 never "COMPLETELY IGNORE", L-104 quality gates, L-103 cascading context, L-098 memory caching, L-009 nullable |
 | **Execution & Debugging** | 871 | 4 | L-067 two-step mode, anti-loop protocol, cycle limits, escalation |
 | **Validation Errors** | 1041 | 4 | Never Trust Defaults, L-053 false positive, L-054 QA override, schema mismatch |
 | **Notion Integration** | 1084 | 6 | Null-check dates, multi-user filters, timezone bug, page objects, Single Source of Truth |
@@ -50,14 +50,17 @@
 | L-006 | 199 | Switch reorder conditions → must update connections | CRITICAL |
 | L-007 | 248 | Switch sequential evaluation errors | CRITICAL |
 | L-008 | 297 | Switch duplicate connections | HIGH |
-| L-009 | 803 | AI Agent tool nullable types | MEDIUM |
+| L-009 | 917 | AI Agent tool nullable types | MEDIUM |
+| L-103 | 824 | Cascading context/memory overrides | CRITICAL |
+| L-104 | 777 | Debug Quality Gates (post-mortem) | HIGH |
+| L-105 | 744 | Never "COMPLETELY IGNORE" in prompts | CRITICAL |
 | L-053 | 1051 | IF Node validator false positive | LOW |
 | L-054 | 1063 | QA override for false positives | LOW |
 | L-060 | 574 | Code Node deprecated syntax timeout | CRITICAL |
-| L-067 | 896 | Two-step execution for large workflows | CRITICAL |
+| L-067 | 1010 | Two-step execution for large workflows | CRITICAL |
 | L-068 | 1258 | IF nodes don't pass binary data | CRITICAL |
 | L-097 | 702 | Telegram fixedCollection format | MEDIUM |
-| L-098 | 751 | AI Agent memory caching | CRITICAL |
+| L-098 | 860 | AI Agent memory caching | CRITICAL |
 | L-100 | 649 | Telegram Reply Keyboard (HTTP Request) | CRITICAL |
 | L-101 | 623 | HTTP Request credential expression | MEDIUM |
 | L-102 | 1276 | Cascading changes - test each | HIGH |
@@ -171,12 +174,12 @@ Edit("learning/LEARNINGS.md",
 
 ## 📊 Statistics
 
-- **Total Lines:** 1,326
-- **Total Entries:** 50+
-- **Critical Issues:** 11 (L-004, L-006, L-007, L-008, L-060, L-067, L-068, L-097, L-098, L-100, L-102)
+- **Total Lines:** 1,520
+- **Total Entries:** 53+
+- **Critical Issues:** 13 (L-004, L-006, L-007, L-008, L-060, L-067, L-068, L-097, L-098, L-100, L-102, L-103, L-105)
 - **Categories:** 13
-- **Most Common Tags:** #critical, #mcp, #switch-node, #ai-agent, #debugging
-- **Last Updated:** 2025-12-17
+- **Most Common Tags:** #critical, #mcp, #switch-node, #ai-agent, #debugging, #post-mortem
+- **Last Updated:** 2025-12-22
 
 ---
 
