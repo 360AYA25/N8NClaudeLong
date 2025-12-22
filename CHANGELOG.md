@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.6.0] - 2025-12-22
+
+### Mandatory Escalation Protocol - Auto WebSearch
+
+**Problem:** Claude kept trying same approaches without searching for existing solutions online. 18 debug cycles could have been 7 with earlier internet search.
+
+**Solution:** Replaced "Cycle Limits" with mandatory "Escalation Protocol" that FORCES WebSearch at specific attempts.
+
+### Changed
+
+**CLAUDE.md - Anti-Loop Protocol:**
+- Replaced vague "Cycle Limits" with concrete "Escalation Protocol"
+- **L1-L2 (attempts 1-3):** Local search (INDEX.md, LEARNINGS.md, N8N-RESOURCES.md)
+- **L3 (attempt 4):** MANDATORY `WebSearch("site:community.n8n.io")`
+- **L4 (attempt 5):** MANDATORY `WebSearch("site:github.com/n8n-io")` + `site:docs.n8n.io`
+- **L5 (attempt 6):** MANDATORY broad WebSearch without site restriction
+- **L6 (attempt 7+):** Escalate to user WITH search results
+- Added WebSearch templates (copy-paste ready)
+- Added reference to `learning/N8N-RESOURCES.md` at protocol start
+
+### Impact
+
+- **WebSearch is no longer optional** - it's MANDATORY at L3-L5
+- **User escalation includes search results** - not just "help me"
+- **Concrete commands** instead of vague "try alternative approach"
+- **Prevents repeated same-approach attempts** by forcing external research
+
+**Source:** User feedback on FoodTracker debugging session
+
+---
+
 ## [1.5.0] - 2025-12-22
 
 ### Session State Architecture - Automatic Context Isolation
