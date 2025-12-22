@@ -62,17 +62,7 @@ ALWAYS explicitly configure ALL parameters that control node behavior.
 - Adding features (plan → implement → validate → test → deploy)
 - Any task with 3+ distinct steps
 
-**TodoWrite structure:**
-```javascript
-TodoWrite({
-  todos: [
-    {content: "Search for templates", status: "completed", activeForm: "Searching for templates"},
-    {content: "Configure nodes", status: "in_progress", activeForm: "Configuring nodes"},
-    {content: "Validate workflow", status: "pending", activeForm: "Validating workflow"},
-    {content: "Deploy to n8n", status: "pending", activeForm: "Deploying to n8n"}
-  ]
-})
-```
+**TodoWrite:** `{content, status: "pending|in_progress|completed", activeForm}` → See [learning/CODE_EXAMPLES.md](learning/CODE_EXAMPLES.md#todowrite-structure)
 
 **Rules:**
 - Mark tasks as `in_progress` BEFORE starting work
@@ -86,31 +76,9 @@ TodoWrite({
 
 1. **Start**: Call `tools_documentation()` for best practices
 
-2. **Template Discovery Phase** (MANDATORY - ALWAYS execute 3+ parallel searches FIRST)
-
-   ⚠️ **EXECUTE AT LEAST 3 SEARCHES IN PARALLEL BEFORE BUILDING:**
-
-   **[Parallel Block 1 - REQUIRED]**
-   ```javascript
-   search_templates({searchMode: 'keyword', query: 'user keywords', limit: 20})
-   search_templates({searchMode: 'by_task', task: 'relevant_task'})
-   search_templates({searchMode: 'by_metadata', complexity: 'simple'})
-   ```
-
-   **[Parallel Block 2 - If Block 1 returns 0 results]**
-   ```javascript
-   search_templates({query: 'alternative/broader terms', limit: 30})
-   search_templates({searchMode: 'by_nodes', nodeTypes: ['n8n-nodes-base.mainNode']})
-   search_templates({searchMode: 'by_metadata', maxSetupMinutes: 60})
-   ```
-
-   **Filtering strategies (use in searches above):**
-   - Beginners: `complexity: "simple"` + `maxSetupMinutes: 30`
-   - By role: `targetAudience: "marketers"` | `"developers"` | `"analysts"`
-   - By time: `maxSetupMinutes: 15` for quick wins
-   - By service: `requiredService: "openai"` for compatibility
-
-   **ONLY proceed to "Node Discovery" if ALL parallel searches return 0 results**
+2. **Template Discovery Phase** (MANDATORY) → See "Templates First" above or [CODE_EXAMPLES.md](learning/CODE_EXAMPLES.md#template-search)
+   - Execute 3+ parallel searches BEFORE building from scratch
+   - Only proceed to Node Discovery if ALL searches return 0 results
 
 3. **Node Discovery** (if no suitable template - parallel execution)
    - Think deeply about requirements. Ask clarifying questions if unclear.
@@ -232,167 +200,23 @@ n8n_update_partial_workflow({id: "wf-123", operations: [{...}]})
 n8n_update_partial_workflow({id: "wf-123", operations: [{...}]})
 ```
 
-### CRITICAL: addConnection Syntax
+### CRITICAL: Connection Syntax
 
-The `addConnection` operation requires **four separate string parameters**. Common mistakes cause misleading errors.
-
-❌ WRONG - Object format (fails with "Expected string, received object"):
+**addConnection** requires 4 string params (NOT object/combined format):
 ```json
-{
-  "type": "addConnection",
-  "connection": {
-    "source": {"nodeId": "node-1", "outputIndex": 0},
-    "destination": {"nodeId": "node-2", "inputIndex": 0}
-  }
-}
+{type: "addConnection", source: "node-id", target: "target-id", sourcePort: "main", targetPort: "main"}
 ```
 
-❌ WRONG - Combined string (fails with "Source node not found"):
+**IF Node Routing** - add `branch: "true"` or `branch: "false"`:
 ```json
-{
-  "type": "addConnection",
-  "source": "node-1:main:0",
-  "target": "node-2:main:0"
-}
+{type: "addConnection", source: "IF", target: "Handler", sourcePort: "main", targetPort: "main", branch: "true"}
 ```
 
-✅ CORRECT - Four separate string parameters:
-```json
-{
-  "type": "addConnection",
-  "source": "node-id-string",
-  "target": "target-node-id-string",
-  "sourcePort": "main",
-  "targetPort": "main"
-}
-```
+**removeConnection** - same 4-param format
 
-**Reference**: [GitHub Issue #327](https://github.com/czlonkowski/n8n-mcp/issues/327)
+⚠️ Without `branch` param on IF nodes, both outputs route to same place!
 
-### ⚠️ CRITICAL: IF Node Multi-Output Routing
-
-IF nodes have **two outputs** (TRUE and FALSE). Use the **`branch` parameter** to route to the correct output:
-
-✅ CORRECT - Route to TRUE branch (when condition is met):
-```json
-{
-  "type": "addConnection",
-  "source": "if-node-id",
-  "target": "success-handler-id",
-  "sourcePort": "main",
-  "targetPort": "main",
-  "branch": "true"
-}
-```
-
-✅ CORRECT - Route to FALSE branch (when condition is NOT met):
-```json
-{
-  "type": "addConnection",
-  "source": "if-node-id",
-  "target": "failure-handler-id",
-  "sourcePort": "main",
-  "targetPort": "main",
-  "branch": "false"
-}
-```
-
-**Common Pattern** - Complete IF node routing:
-```json
-n8n_update_partial_workflow({
-  id: "workflow-id",
-  operations: [
-    {type: "addConnection", source: "If Node", target: "True Handler", sourcePort: "main", targetPort: "main", branch: "true"},
-    {type: "addConnection", source: "If Node", target: "False Handler", sourcePort: "main", targetPort: "main", branch: "false"}
-  ]
-})
-```
-
-**Note**: Without the `branch` parameter, both connections may end up on the same output, causing logic errors!
-
-### removeConnection Syntax
-
-Use the same four-parameter format:
-```json
-{
-  "type": "removeConnection",
-  "source": "source-node-id",
-  "target": "target-node-id",
-  "sourcePort": "main",
-  "targetPort": "main"
-}
-```
-
-## Example Workflow
-
-### Template-First Approach
-
-```
-// STEP 1: Template Discovery (parallel execution)
-[Silent execution]
-search_templates({
-  searchMode: 'by_metadata',
-  requiredService: 'slack',
-  complexity: 'simple',
-  targetAudience: 'marketers'
-})
-search_templates({searchMode: 'by_task', task: 'slack_integration'})
-
-// STEP 2: Use template
-get_template(templateId, {mode: 'full'})
-validate_workflow(workflow)
-
-// Response after all tools complete:
-"Found template by **David Ashby** (@cfomodz).
-View at: https://n8n.io/workflows/2414
-
-Validation: ✅ All checks passed"
-```
-
-### Building from Scratch (if no template)
-
-```
-// STEP 1: Discovery (parallel execution)
-[Silent execution]
-search_nodes({query: 'slack', includeExamples: true})
-search_nodes({query: 'communication trigger'})
-
-// STEP 2: Configuration (parallel execution)
-[Silent execution]
-get_node({nodeType: 'n8n-nodes-base.slack', detail: 'standard', includeExamples: true})
-get_node({nodeType: 'n8n-nodes-base.webhook', detail: 'standard', includeExamples: true})
-
-// STEP 3: Validation (parallel execution)
-[Silent execution]
-validate_node({nodeType: 'n8n-nodes-base.slack', config, mode: 'minimal'})
-validate_node({nodeType: 'n8n-nodes-base.slack', config: fullConfig, mode: 'full', profile: 'runtime'})
-
-// STEP 4: Build
-// Construct workflow with validated configs
-// ⚠️ Set ALL parameters explicitly
-
-// STEP 5: Validate
-[Silent execution]
-validate_workflow(workflowJson)
-
-// Response after all tools complete:
-"Created workflow: Webhook → Slack
-Validation: ✅ Passed"
-```
-
-### Batch Updates
-
-```json
-// ONE call with multiple operations
-n8n_update_partial_workflow({
-  id: "wf-123",
-  operations: [
-    {type: "updateNode", nodeId: "slack-1", changes: {position: [100, 200]}},
-    {type: "updateNode", nodeId: "http-1", changes: {position: [300, 200]}},
-    {type: "cleanStaleConnections"}
-  ]
-})
-```
+**Full examples:** [learning/CODE_EXAMPLES.md](learning/CODE_EXAMPLES.md#addconnection-syntax)
 
 ## Important Rules
 
@@ -458,98 +282,28 @@ FoodTracker `/welcome` took 18 cycles over 2 days because:
 
 ### Pre-Deploy Checklist
 
-**BEFORE saying "готово, проверяй" or deploying ANY change:**
+**BEFORE "готово, проверяй":**
 
-#### 1. Schema Verification (for DB changes)
-```sql
--- MANDATORY before ANY migration:
-SELECT column_name, data_type
-FROM information_schema.columns
-WHERE table_name = 'target_table';
-```
-- ✅ Verified all column names exist
-- ✅ Verified column types match
-- ✅ Tested RPC function manually in SQL Editor
-
-#### 2. Data Flow Tracing (for workflow changes)
-Map ALL execution paths through the node you're changing:
-```
-| Switch Output | Node Path | Output Field | Covered? |
-|---------------|-----------|--------------|----------|
-| 0 (Voice) | Whisper | transcription | ✅ |
-| 1 (Photo) | Vision | product_name | ✅ |
-| 2-9 (Commands) | Week Calc | command | ✅ |
-| 10 (Text) | Process Text | data | ✅ |
-```
-
-#### 3. E2E Flow Simulation
-- ✅ Traced full user journey (start → finish)
-- ✅ Identified ALL states (first message, answers, confirmation)
-- ✅ Verified each state mentally or manually
-
-#### 4. Cascading Impact Check
-- ✅ Listed all components touched
-- ✅ Verified each still works
-- ✅ Tested integration points
-
-#### 5. LEARNINGS.md Consultation
-```javascript
-Read("learning/INDEX.md")  // Find relevant category
-Grep({pattern: "keyword", path: "learning/LEARNINGS.md"})
-```
+| Check | When | Action |
+|-------|------|--------|
+| Schema | DB changes | Verify columns exist + types match + test RPC |
+| Data Flow | Workflow changes | Map ALL execution paths through changed node |
+| E2E | Always | Trace full user journey start→finish |
+| Cascade | Always | List touched components, verify each works |
+| Learnings | Always | `Read(learning/INDEX.md)` → relevant section |
 
 ### Anti-Cascade Rules
 
-**NEVER use broad override language in prompts:**
-
-❌ BAD:
-- "COMPLETELY IGNORE all context"
-- "ALWAYS OVERRIDE everything"
-- "DISABLE ALL checks"
-
-✅ GOOD:
-```markdown
-IGNORE: user_goals, user_profile (OLD database values)
-ALWAYS USE: telegram_user_id (REQUIRED for tool call)
-REASON: Input context contains stale data during /welcome flow
-```
+❌ **Never:** "COMPLETELY IGNORE all" / "ALWAYS OVERRIDE everything" / "DISABLE ALL"
+✅ **Good:** Explicit list: `IGNORE: [specific fields] | ALWAYS USE: [required fields] | REASON: [why]`
 
 ### Incremental Change Protocol
 
-**When fixing complex issues:**
-1. Change ONE thing
-2. Verify it works
-3. Document what changed
-4. Then change next thing
+**Rule:** Change ONE → Verify → Document → Next. NEVER batch fixes hoping they all work.
 
-**NEVER:** Apply multiple fixes at once hoping they all work
+### User Communication
 
-### User Communication Template
-
-**Instead of:** "готово, проверяй"
-
-**Use:**
-```
-Применил fix для [конкретная проблема].
-
-**Что исправлено:**
-- [конкретное изменение]
-
-**Что проверил:**
-- [x] Schema matches (if DB change)
-- [x] All data paths covered (if workflow change)
-- [x] E2E flow simulated
-
-**Ожидаемое поведение:**
-1. [step 1]
-2. [step 2]
-3. [expected result]
-
-**Если что-то не так, скажи:**
-- На каком шаге
-- Что увидел
-- Скриншот если есть
-```
+**Instead of:** "готово, проверяй" → **Use:** Fix description + What checked + Expected behavior + "If wrong, tell step/observation"
 
 ### Debug Cycle Hard Limits
 
@@ -641,70 +395,23 @@ TodoWrite([
 | **L5: Broad** | 6 | Расширенный поиск | `WebSearch("n8n [problem] 2024 2025")` без site: |
 | **L6: User** | 7+ | Эскалация | С результатами ВСЕХ поисков |
 
-### L3-L5: WebSearch Templates (copy-paste)
+**WebSearch Templates:** [learning/CODE_EXAMPLES.md](learning/CODE_EXAMPLES.md#websearch-templates) ← L3-L5 copy-paste commands
 
-```javascript
-// L3: Community Forum
-WebSearch({query: "n8n [ERROR_MESSAGE] site:community.n8n.io"})
+⚠️ **WebSearch ОБЯЗАТЕЛЕН на L3-L5!** (18 cycles → 7 if searched earlier)
 
-// L4: GitHub Issues
-WebSearch({query: "n8n [BUG_DESCRIPTION] site:github.com/n8n-io/n8n/issues"})
+### L6 Escalation (attempt 7+)
 
-// L4: Official Docs
-WebSearch({query: "n8n [NODE_NAME] site:docs.n8n.io"})
+**Format:** What tried (L1-L2) + What found online (L3-L5 links) + Options (apply solution/rollback/ask help)
 
-// L5: Broad Search (no site restriction)
-WebSearch({query: "n8n [PROBLEM] solution 2024 2025"})
-```
+### After Solving
 
-### ⚠️ CRITICAL: WebSearch НЕ опционален!
+1. `Edit(learning/LEARNINGS.md)` - add entry to category
+2. Update INDEX.md if needed
+3. Clear TodoWrite
 
-На уровнях L3-L5 WebSearch **ОБЯЗАТЕЛЕН**, даже если кажется что "я и так знаю решение".
-Причина: 18 циклов debugging могли быть 7 если бы искал в интернете раньше.
+### Rollback
 
-### При достижении L6 (попытка 7+)
-
-```markdown
-🚨 **ESCALATION TO USER**
-
-Прошёл все уровни поиска без решения.
-
-**Что пробовал (L1-L2):**
-1. [описание] → [результат]
-2. [описание] → [результат]
-
-**Что нашёл в интернете (L3-L5):**
-- Community: [ссылка] - [краткое описание]
-- GitHub: [ссылка] - [краткое описание]
-- Docs: [ссылка] - [краткое описание]
-
-**Варианты:**
-1. Применить решение из [источник]: [описание]
-2. Rollback к версии #X
-3. Нужна твоя помощь с [конкретный вопрос]
-```
-
-### После решения проблемы (ОБЯЗАТЕЛЬНО)
-
-```javascript
-// 1. Record in learning/LEARNINGS.md
-Edit("learning/LEARNINGS.md", add new entry in category)
-
-// 2. Обновить Quick Index если новая категория
-// 3. Очистить TodoWrite
-```
-
-### Rollback Protocol
-
-```javascript
-// Если нужен откат:
-n8n_workflow_versions({
-  mode: "rollback",
-  workflowId: "ID",
-  versionId: CHECKPOINT_VERSION  // или без versionId для последней
-})
-// Автоматически создаёт backup перед откатом!
-```
+`n8n_workflow_versions({mode: "rollback", workflowId: "ID"})` - auto-creates backup!
 
 ---
 
@@ -722,115 +429,35 @@ Read("projects/[workflow-name]/debug_log.md")
 // Check: What solutions were tried?
 ```
 
-**Шаг 1: Сохранить checkpoint**
-```javascript
-n8n_workflow_versions({mode: "list", workflowId: "ID", limit: 3})
-// Запомнить: "Checkpoint: version #X"
-TodoWrite([{content: "Checkpoint: v#X", status: "completed", activeForm: "Saved"}])
-```
+| Step | Action | Command |
+|------|--------|---------|
+| 1 | Save checkpoint | `n8n_workflow_versions({mode: "list", limit: 3})` |
+| 2 | Check learnings | `Read(learning/INDEX.md)` → targeted section |
+| 3 | Record in debug_log.md | BEFORE attempting fix |
+| 4 | Plan with TodoWrite | Checkpoint → Diagnose → Fix → Validate |
 
-**Step 2: Check learning/INDEX.md + LEARNINGS.md**
-```javascript
-Read("learning/INDEX.md")  // Find category (~500 tokens)
-Read("learning/LEARNINGS.md", {offset: LINE, limit: 50})  // Targeted read (~400 tokens)
-```
+### During Debug
 
-**Шаг 3: Record start in debug_log.md**
-```javascript
-// MANDATORY: Write BEFORE attempting fix
-Edit("projects/[workflow-name]/debug_log.md", add entry:)
-```
-```markdown
-### [YYYY-MM-DD HH:MM] - Issue Name
+- After EACH change: `validate_node()` → `validate_workflow()` → `n8n_validate_workflow()`
+- Attempt 3+ fails: STOP → Read debug_log + learnings → alternative approach
+- Attempt 6+ fails: Ask user OR rollback
+- Update debug_log.md after EACH attempt: ✅/❌/⚠️
 
-**Cycle:** 1
-**Problem:** Brief description
-**Attempt:** What I'm trying
-**Result:** [Will update after]
-```
-
-**Шаг 4: Составить план**
-```javascript
-TodoWrite([
-  {content: "Checkpoint saved: v#X", status: "completed", activeForm: "..."},
-  {content: "Diagnose: [описание]", status: "in_progress", activeForm: "Diagnosing..."},
-  {content: "Fix: [план]", status: "pending", activeForm: "Fixing..."},
-  {content: "Validate", status: "pending", activeForm: "Validating..."}
-])
-```
-
-### Во время debug-сессии
-
-**После КАЖДОГО изменения:**
-```javascript
-// 1. Валидация узла
-validate_node({nodeType: "...", config: {...}, mode: "full"})
-
-// 2. Валидация workflow
-validate_workflow({workflow: {...}})
-
-// 3. Проверка в n8n (если задеплоено)
-n8n_validate_workflow({id: "..."})
-```
-
-**Если ошибка повторяется:**
-```
-Попытка 1: ❌ → Edit debug_log.md: record what failed
-Попытка 2: ❌ → Edit debug_log.md: record, compare with attempt 1
-Attempt 3: ❌ → STOP! Read debug_log.md + learning/INDEX.md, find alternative
-Попытка 6+: ❌ → Ask user OR rollback to checkpoint
-```
-
-**MANDATORY after each attempt:**
-```javascript
-// Update debug_log.md with result
-Edit("projects/[workflow-name]/debug_log.md", update entry:)
-```
-```markdown
-**Result:** ✅ WORKED / ❌ FAILED / ⚠️ PARTIAL
-**Notes:** What happened, observations
-```
+**Code examples:** [learning/CODE_EXAMPLES.md](learning/CODE_EXAMPLES.md#debug-session)
 
 ### Изоляция изменений
 
-**Правило: Менять ОДИН узел за раз**
-
-```javascript
-// ❌ ПЛОХО: несколько изменений сразу
-operations: [
-  {type: "updateNode", nodeId: "node1", changes: {...}},
-  {type: "updateNode", nodeId: "node2", changes: {...}},
-  {type: "addConnection", ...}
-]
-
-// ✅ ХОРОШО: по одному, с валидацией между
-// Шаг 1
-operations: [{type: "updateNode", nodeId: "node1", changes: {...}}]
-// validate...
-// Шаг 2
-operations: [{type: "updateNode", nodeId: "node2", changes: {...}}]
-// validate...
-```
+**Правило:** ONE node/connection per operation → validate → next. Never batch during debug.
 
 ### Execution Analysis (L-067)
 
-**Для workflow >10 nodes или с binary data:**
-```javascript
-// STEP 1: Overview (find WHERE) - safe
-n8n_executions({action: "get", id: "...", mode: "summary"})
+| Workflow Size | Binary Data | Mode |
+|--------------|-------------|------|
+| >10 nodes | Any | Two-step: `mode: "summary"` → `mode: "filtered"` |
+| ≤10 nodes | Yes | Two-step approach |
+| ≤10 nodes | No | `mode: "full"` safe |
 
-// STEP 2: Details (find WHY) - targeted
-n8n_executions({
-  action: "get", id: "...",
-  mode: "filtered",
-  nodeNames: ["problem_node", "before_node"],
-  itemsLimit: -1
-})
-```
-
-**Decision tree:**
-- >10 nodes OR binary → Two-step approach
-- ≤10 nodes, no binary → mode="full" safe
+Details: [learning/CODE_EXAMPLES.md](learning/CODE_EXAMPLES.md#execution-analysis)
 
 ### Завершение debug-сессии
 
@@ -886,163 +513,48 @@ See [Docs/SESSION_INIT_GUIDE.md](Docs/SESSION_INIT_GUIDE.md) for full guide.
 
 ---
 
-### When starting work on a workflow
+### Session Checklists
 
-```
-□ Create/check folder projects/[workflow-name]/
-□ Read projects/[workflow-name]/PROJECT_STATE.md (or create)
-□ Read learning/INDEX.md (know what was solved before)
-□ Check n8n_workflow_versions (know versions)
-□ Create TodoWrite plan (progress tracking)
-□ Determine checkpoint (for rollback)
-```
-
-### When continuing interrupted work
-
-```
-□ Read projects/[workflow-name]/PROJECT_STATE.md
-□ Check TodoWrite (what was in progress)
-□ Check latest workflow changes
-□ Verify n8n version matches expected
-□ Continue from last point or restart
-```
+| Starting | Continuing |
+|----------|------------|
+| Create/check projects/[name]/ | Read PROJECT_STATE.md |
+| Read PROJECT_STATE.md | Check TodoWrite |
+| Read learning/INDEX.md | Check latest changes |
+| Check n8n_workflow_versions | Verify version |
+| Create TodoWrite plan | Continue or restart |
+| Determine checkpoint | |
 
 ---
 
 ## Learning System
 
-**Location:** `learning/INDEX.md` + `learning/LEARNINGS.md` (1,326 lines)
+**Files:** `learning/INDEX.md` (~500 tokens) + `learning/LEARNINGS.md` (1,326 lines)
 
-### Structure
+**Read:** `Read(INDEX.md)` → find line → `Read(LEARNINGS.md, {offset: LINE, limit: 50})`
+**Write:** Add entry at TOP of category → Update INDEX if shifted >50 lines
 
-```
-learning/
-  INDEX.md           # Index with line numbers (~500 tokens)
-  LEARNINGS.md       # All knowledge in one file (1,326 lines)
-  N8N-RESOURCES.md   # External resources
-  archive/           # Old files backup
-```
+### Quick Access Lines
 
-### Read Protocol
+| Config | Debugging |
+|--------|-----------|
+| Set Node → Line 32 | Execution Analysis → Line 871 |
+| IF Node → Line 146 | Anti-Loop → Line 914 |
+| Switch → Line 517 | Common Errors → Line 1258 |
+| addConnection → Line 146 | |
 
-```javascript
-// Step 1: Read INDEX (~500 tokens)
-Read("learning/INDEX.md")
-
-// Step 2: Find category line number
-// Example: "Switch Node" → Line 517
-
-// Step 3: Read targeted section (~300-500 tokens)
-Read("learning/LEARNINGS.md", {offset: 517, limit: 80})
-
-// Total: ~800-1000 tokens vs 10K+ full file = 90% savings
-```
-
-### Write Protocol
-
-```javascript
-// After solving issue:
-
-// 1. Determine category (node/operation/debugging)
-// 2. Read category section
-Read("learning/LEARNINGS.md", {offset: LINE, limit: 50})
-
-// 3. Add entry at TOP of category (newest first)
-Edit("learning/LEARNINGS.md",
-  old_string: "## Category\n\n### [2025-12-15...",
-  new_string: "## Category\n\n### [2025-12-17 NEW]\n...\n\n### [2025-12-15..."
-)
-
-// 4. Update INDEX.md only if line numbers shifted >50 lines
-```
-
-### Quick Access (Check Before Config)
-
-Before configuring nodes:
-1. **Set Node** → Line 32 (Critical Patterns)
-2. **IF Node** → Line 146 (MCP - branch param)
-3. **Switch Node** → Line 517 (full section)
-4. **addConnection** → Line 146 (4-param format)
-5. **L-067 execution** → Line 871 (two-step mode)
-
-Before debugging:
-- **Execution Analysis** → Line 871
-- **Anti-Loop Protocol** → Line 914
-- **Common Errors** → Line 1258
-
-### Entry Format
-
-```markdown
-### [YYYY-MM-DD HH:MM] Short Title (L-XXX)
-
-**Problem:** What went wrong
-**Tried:**
-- Attempt 1: [action] → [result]
-- Attempt 2: [action] → [result]
-**Root Cause:** Technical reason
-**Solution:**
-\`\`\`javascript
-// Code or commands
-\`\`\`
-**Prevention:** How to avoid
-**Impact:** HIGH/MEDIUM/LOW
-**Tags:** #tag1 #tag2 #tag3
-**Reference:** Project name
-```
+**Entry Format:** [learning/CODE_EXAMPLES.md](learning/CODE_EXAMPLES.md#learning-entry-format)
 
 ---
 
-## Critical Node Configurations (Quick Reference)
+## Critical Node Configurations
 
-### Set Node v3.4+
-```javascript
-{
-  "mode": "manual",  // MANDATORY
-  "assignments": {
-    "assignments": [{
-      "value": "={{ $json.field }}"  // ={{ prefix!
-    }]
-  }
-}
-```
+**Full examples:** [learning/CODE_EXAMPLES.md](learning/CODE_EXAMPLES.md#node-configurations)
 
-### IF Node v2+
-```javascript
-{
-  "conditions": {
-    "conditions": [...]  // Array, not object!
-  }
-}
-```
-
-### HTTP Request Error Handling
-```javascript
-{
-  "continueOnFail": true  // Node level, not in options!
-}
-```
-
-### addConnection (4 params + branch for IF)
-```javascript
-{type: "addConnection", source: "IF", target: "Success",
- sourcePort: "main", targetPort: "main", branch: "true"}
-```
-
-### Code Node Data Access
-```javascript
-const data = $node['Node Name'].json.field;
-// OR
-const data = $('Node Name').item.json.field;
-```
-
-### Telegram Reply Keyboard (use HTTP Request!)
-```javascript
-{
-  "method": "POST",
-  "url": "https://api.telegram.org/bot<TOKEN>/sendMessage",
-  "jsonBody": "={{ JSON.stringify({
-    chat_id: ...,
-    reply_markup: { keyboard: [[{text: 'Button'}]] }
-  }) }}"
-}
-```
+| Node | Key Rule |
+|------|----------|
+| **Set v3.4+** | `mode: "manual"` + `={{ prefix` required |
+| **IF v2+** | `conditions.conditions: [...]` (array!) |
+| **HTTP Request** | `continueOnFail: true` at node level |
+| **addConnection** | 4 string params + `branch: "true"/"false"` for IF |
+| **Code Node** | `$node['Name'].json.field` or `$('Name').item.json` |
+| **Telegram Keyboard** | Use HTTP Request node, not Telegram node |

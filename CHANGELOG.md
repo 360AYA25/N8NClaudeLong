@@ -2,6 +2,91 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.7.0] - 2025-12-22
+
+### ⚠️ MAJOR: CLAUDE.md Token Optimization (47% reduction)
+
+**Problem:** CLAUDE.md loaded ~10K tokens on EVERY request, costing ~$0.09/request in input tokens.
+
+**Solution:** Extracted code examples to separate file, consolidated verbose sections into compact tables.
+
+### Changed
+
+**CLAUDE.md - MAIN PROMPT FILE MODIFIED:**
+- **Before:** 1,048 lines, 33,060 chars (~10K tokens)
+- **After:** 560 lines, 21,268 chars (~6K tokens)
+- **Reduction:** 47% lines, 36% chars, ~40% tokens
+
+**Sections consolidated:**
+- Pre-Deploy Checklist → compact table (35 lines → 7 lines)
+- Anti-Cascade Rules + Incremental Change → single-line rules
+- User Communication Template → one-line format description
+- addConnection Syntax → 2 examples + reference (90 lines → 15 lines)
+- Debug Session steps → compact table (55 lines → 15 lines)
+- Execution Analysis → decision table (30 lines → 8 lines)
+- Learning System → compact protocol (50 lines → 15 lines)
+- WebSearch Templates → reference to CODE_EXAMPLES.md (15 lines → 1 line)
+- Entry Format → reference to CODE_EXAMPLES.md (18 lines → 1 line)
+
+### Added
+
+**New Files:**
+- `Docs/PROCESS_FLOWCHART.md` - Visual diagram of when each protocol triggers
+  - Master Decision Tree (task type → protocol mapping)
+  - Workflow Process flow (building steps)
+  - Debug/Fix Protocol with Escalation levels
+  - Pre-Deploy Checklist diagram
+  - Trigger table for quick reference
+
+- `learning/CODE_EXAMPLES.md` - All extracted code examples
+  - Template Search (3+ parallel)
+  - addConnection Syntax (correct/wrong formats)
+  - Batch Operations
+  - Node Configurations (Set, IF, HTTP, Code, Telegram)
+  - TodoWrite Structure
+  - Debug Session (start steps, during debug)
+  - Execution Analysis (L-067 two-step)
+  - WebSearch Templates (L3-L5)
+  - Debug Log Entry Format
+  - Learning Entry Format
+
+### Preserved
+
+**All 13 sections still present in CLAUDE.md:**
+1. Core Principles (Silent Execution, Parallel, Templates First, Validation, Defaults, Task Tracking)
+2. Workflow Process (8 steps)
+3. Critical Warnings (Never Trust Defaults, Example Availability)
+4. Validation Strategy (4 levels)
+5. Response Format
+6. Batch Operations + Connection Syntax
+7. Important Rules (Core Behavior, Attribution, Performance, Code Node, Popular Nodes)
+8. Debug Quality Gates (POST-MORTEM LESSON)
+9. Anti-Loop Protocol with Escalation (L1-L6)
+10. Debug Session Protocol
+11. Session Start Checklist
+12. Learning System
+13. Critical Node Configurations
+
+### Rollback
+
+**To restore previous version:**
+```bash
+git checkout 5db097c -- CLAUDE.md
+```
+
+**Previous commit:** `5db097c feat: add mandatory escalation protocol with auto WebSearch`
+
+### Impact
+
+- **Cost per request:** ~$0.09 → ~$0.054 (40% savings)
+- **All functionality preserved** - just consolidated format
+- **Better maintainability** - code examples in dedicated file
+- **Visual reference** - process flowchart for quick lookup
+
+**Source:** User request for CLAUDE.md token optimization
+
+---
+
 ## [1.6.0] - 2025-12-22
 
 ### Mandatory Escalation Protocol - Auto WebSearch
