@@ -44,6 +44,16 @@
 
 **Status:** ✅ COMPLETE - Committed dc9bbe3 and pushed to main
 
+**UPDATE [2025-12-22 03:15]:** Added second 🔴 MANDATORY block
+- **USER COMPLAINT:** "Rules already written several times but still not following them!"
+- **PROBLEM:** Workflow Modification Rule buried at line 330 - easy to miss
+- **SOLUTION:** Added "🔴 MANDATORY: Read Before Changes" block BEFORE Core Principles
+  - Database/RPC changes → Read SUPABASE_SCHEMA.md + ARCHITECTURE.md
+  - AI Agent changes → Read AI_PROMPT.md (WHY sections exist)
+  - Workflow structure → Read ARCHITECTURE.md (dependencies)
+- **Examples:** /welcome 18 cycles (didn't check schema), prompt cascades
+- **Rule:** "If you plan to change and DON'T read these files first → you WILL break something"
+
 ---
 
 ## ✅ RESOLVED: /welcome Command - 18 Cycles (2025-12-19 to 2025-12-20)

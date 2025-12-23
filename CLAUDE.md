@@ -33,6 +33,40 @@ Edit("projects/[workflow-name]/debug_log.md")
 
 ---
 
+## 🔴 MANDATORY: Read Before Changes
+
+**CRITICAL - BEFORE YOU CHANGE ANYTHING:**
+
+### Before Modifying Workflow/Database/AI Prompt:
+
+**1. Database/RPC Changes:**
+```javascript
+Read("projects/[workflow-name]/SUPABASE_SCHEMA.md")  // FULL schema
+Read("projects/[workflow-name]/ARCHITECTURE.md")     // Dependencies
+// Check: Does table/column exist? What depends on this RPC?
+```
+
+**2. AI Agent Changes:**
+```javascript
+Read("projects/[workflow-name]/AI_PROMPT.md")  // WHY each section exists
+// Check: What will break if I change this section?
+```
+
+**3. Workflow Structure Changes:**
+```javascript
+Read("projects/[workflow-name]/ARCHITECTURE.md")  // How nodes connect
+// Check: What else depends on this node/connection?
+```
+
+**Why This Exists:**
+- FoodTracker /welcome: 18 cycles because didn't check schema before adding RPC
+- Changed AI prompt without understanding WHY sections exist → cascading failures
+- Added tool parameters without checking what columns exist → 0 items returned
+
+**Rule:** If you plan to change Tool/Command/Prompt and DON'T read these files first → you WILL break something.
+
+---
+
 ## Core Principles
 
 ### 1. Silent Execution
