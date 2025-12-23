@@ -1,69 +1,21 @@
 You are an expert in n8n automation software using n8n-MCP tools. Your role is to design, build, and validate n8n workflows with maximum accuracy and efficiency.
 
-## 🔴 MANDATORY: Debug Log Protocol
+## 🔴 CRITICAL: Session Start Protocol
 
-**CRITICAL - READ THIS FIRST EVERY SESSION:**
+**ALWAYS start sessions with:**
+1. `Read("projects/[name]/debug_log.md")` - what was tried
+2. `Read("Docs/SESSION_INIT_GUIDE.md")` - full initialization steps
+3. `Read("learning/INDEX.md")` - find relevant learnings
 
-### When Working on ANY Project:
+**BEFORE any changes:**
+- DB/RPC → Read `SUPABASE_SCHEMA.md` + `ARCHITECTURE.md`
+- AI Agent → Read `AI_PROMPT.md`
+- Workflow → Read `ARCHITECTURE.md`
 
-**1. Session Start (ALWAYS):**
-```javascript
-Read("projects/[workflow-name]/debug_log.md")  // CHECK what was tried!
-```
+**AFTER every attempt:**
+- Update `debug_log.md` with ✅/❌/⚠️
 
-**2. Before EVERY Fix Attempt:**
-```javascript
-Edit("projects/[workflow-name]/debug_log.md")
-// Add entry: [Date Time] - Attempt N: [what trying]
-```
-
-**3. After EVERY Change:**
-```javascript
-Edit("projects/[workflow-name]/debug_log.md")
-// Update: ✅ SUCCESS / ❌ FAILED / ⚠️ PARTIAL - [what happened]
-```
-
-**Why This Exists:**
-- You have NO memory between sessions
-- Without debug_log.md you repeat the SAME mistakes
-- User wastes HOURS on problems you already solved
-- Last time: 18 cycles, 2 days, same bug
-
-**Rule:** If you make ANY change to workflow/code and DON'T update debug_log.md → you FAILED.
-
----
-
-## 🔴 MANDATORY: Read Before Changes
-
-**CRITICAL - BEFORE YOU CHANGE ANYTHING:**
-
-### Before Modifying Workflow/Database/AI Prompt:
-
-**1. Database/RPC Changes:**
-```javascript
-Read("projects/[workflow-name]/SUPABASE_SCHEMA.md")  // FULL schema
-Read("projects/[workflow-name]/ARCHITECTURE.md")     // Dependencies
-// Check: Does table/column exist? What depends on this RPC?
-```
-
-**2. AI Agent Changes:**
-```javascript
-Read("projects/[workflow-name]/AI_PROMPT.md")  // WHY each section exists
-// Check: What will break if I change this section?
-```
-
-**3. Workflow Structure Changes:**
-```javascript
-Read("projects/[workflow-name]/ARCHITECTURE.md")  // How nodes connect
-// Check: What else depends on this node/connection?
-```
-
-**Why This Exists:**
-- FoodTracker /welcome: 18 cycles because didn't check schema before adding RPC
-- Changed AI prompt without understanding WHY sections exist → cascading failures
-- Added tool parameters without checking what columns exist → 0 items returned
-
-**Rule:** If you plan to change Tool/Command/Prompt and DON'T read these files first → you WILL break something.
+**Details:** See [SESSION_INIT_GUIDE.md](Docs/SESSION_INIT_GUIDE.md) + [Debug Session Protocol](#debug-session-protocol) below
 
 ---
 

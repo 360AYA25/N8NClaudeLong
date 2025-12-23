@@ -44,15 +44,19 @@
 
 **Status:** ✅ COMPLETE - Committed dc9bbe3 and pushed to main
 
-**UPDATE [2025-12-22 03:15]:** Added second 🔴 MANDATORY block
-- **USER COMPLAINT:** "Rules already written several times but still not following them!"
-- **PROBLEM:** Workflow Modification Rule buried at line 330 - easy to miss
-- **SOLUTION:** Added "🔴 MANDATORY: Read Before Changes" block BEFORE Core Principles
-  - Database/RPC changes → Read SUPABASE_SCHEMA.md + ARCHITECTURE.md
-  - AI Agent changes → Read AI_PROMPT.md (WHY sections exist)
-  - Workflow structure → Read ARCHITECTURE.md (dependencies)
-- **Examples:** /welcome 18 cycles (didn't check schema), prompt cascades
-- **Rule:** "If you plan to change and DON'T read these files first → you WILL break something"
+**UPDATE [2025-12-22 03:15]:** Removed duplication - use references
+- **USER COMPLAINT:** "You already have files with all this! Stop duplicating in CLAUDE.md!"
+- **PROBLEM:** Added 64 lines of detailed instructions when docs already exist
+- **SOLUTION:** Condensed to 16 lines - just commands + references
+  - Removed detailed "Why This Exists" sections (already in SESSION_INIT_GUIDE.md)
+  - Removed examples (already in debug_log.md and LEARNINGS.md)
+  - Kept only: 3 Read commands + 3 BEFORE rules + 1 AFTER rule + link to docs
+- **Files with full details:**
+  - Docs/SESSION_INIT_GUIDE.md (10KB) - session initialization
+  - learning/LEARNINGS.md (60KB) - all learnings
+  - learning/CODE_EXAMPLES.md (5KB) - code patterns
+  - Debug Session Protocol section (line ~468 in CLAUDE.md)
+- **Result:** CLAUDE.md stays lean, references comprehensive docs
 
 ---
 
