@@ -11,6 +11,8 @@
 
 | File | Read BEFORE | Update AFTER confirmed |
 |------|-------------|------------------------|
+| **workflow_v136_canonical.json** | Rollback needed | Never (canonical snapshot) |
+| **WORKFLOW_SNAPSHOT.md** | Restore workflow | Snapshot created |
 | **SUPABASE_SCHEMA.md** | DB/RPC changes | Schema changes |
 | **AI_PROMPT.md** | AI Agent changes | Prompt changes |
 | **ARCHITECTURE.md** | Workflow structure | Structure changes |

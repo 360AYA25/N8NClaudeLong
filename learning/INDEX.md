@@ -11,6 +11,7 @@
 
 | Issue | Line | When to Check |
 |-------|------|---------------|
+| **L-110 NEVER fix working systems** | **34** | **BEFORE touching ANY production workflow** |
 | Set Node ={{ syntax | 32 | Before any Set Node config |
 | IF Node branch param | 146 | Before IF connections |
 | Switch duplicates | 517 | After Switch routing changes |
@@ -22,6 +23,7 @@
 | L-006 reorder conditions | 199 | Switch routing after reorder |
 | L-005 Code variables | 461 | Code node "variable not defined" |
 | L-004 IF branch missing | 174 | IF connection but node doesn't execute |
+| L-109 prompt over-spec | 744 | Before adding aggressive AI prompt instructions |
 
 ### By Category
 
@@ -34,7 +36,7 @@
 | **Code Node** | 560 | 3 | L-005 variables, L-060 deprecated syntax, regex escaping |
 | **HTTP Request** | 599 | 3 | continueOnFail, L-101 credentials, status codes |
 | **Telegram Bot** | 639 | 5 | L-100 Reply Keyboard (HTTP), L-097 fixedCollection, webhooks, message types |
-| **AI Agent** | 742 | 8 | L-105 never "COMPLETELY IGNORE", L-104 quality gates, L-103 cascading context, L-098 memory caching, L-009 nullable |
+| **AI Agent** | 808 | 13 | L-111 chatInput only, L-109 prompt over-specification, L-108 Memory Detection, L-107 DB session unreliable, L-106 optimizeResponse:false, L-105 never "IGNORE", L-104 quality gates, L-103 cascading, L-098 memory, L-009 nullable |
 | **Execution & Debugging** | 871 | 4 | L-067 two-step mode, anti-loop protocol, cycle limits, escalation |
 | **Validation Errors** | 1041 | 4 | Never Trust Defaults, L-053 false positive, L-054 QA override, schema mismatch |
 | **Notion Integration** | 1084 | 6 | Null-check dates, multi-user filters, timezone bug, page objects, Single Source of Truth |
@@ -50,10 +52,15 @@
 | L-006 | 199 | Switch reorder conditions → must update connections | CRITICAL |
 | L-007 | 248 | Switch sequential evaluation errors | CRITICAL |
 | L-008 | 297 | Switch duplicate connections | HIGH |
-| L-009 | 917 | AI Agent tool nullable types | MEDIUM |
-| L-103 | 824 | Cascading context/memory overrides | CRITICAL |
-| L-104 | 777 | Debug Quality Gates (post-mortem) | HIGH |
-| L-105 | 744 | Never "COMPLETELY IGNORE" in prompts | CRITICAL |
+| L-009 | 1090 | AI Agent tool nullable types | MEDIUM |
+| L-103 | 997 | Cascading context/memory overrides | CRITICAL |
+| L-104 | 950 | Debug Quality Gates (post-mortem) | HIGH |
+| L-105 | 915 | Never "COMPLETELY IGNORE" in prompts | CRITICAL |
+| L-106 | 851 | toolHttpRequest optimizeResponse:false blocks AI | HIGH |
+| L-107 | 808 | Session state DB unreliability | HIGH |
+| L-108 | 809 | Unified SESSION DETECTION - Memory vs DB | CRITICAL |
+| L-111 | 810 | AI Agent only reads chatInput field | CRITICAL |
+| L-109 | 877 | Prompt over-specification breaks features | CRITICAL |
 | L-053 | 1051 | IF Node validator false positive | LOW |
 | L-054 | 1063 | QA override for false positives | LOW |
 | L-060 | 574 | Code Node deprecated syntax timeout | CRITICAL |
@@ -174,12 +181,12 @@ Edit("learning/LEARNINGS.md",
 
 ## 📊 Statistics
 
-- **Total Lines:** 1,520
-- **Total Entries:** 53+
-- **Critical Issues:** 13 (L-004, L-006, L-007, L-008, L-060, L-067, L-068, L-097, L-098, L-100, L-102, L-103, L-105)
+- **Total Lines:** 1,753
+- **Total Entries:** 58
+- **Critical Issues:** 16 (L-004, L-006, L-007, L-008, L-060, L-067, L-068, L-097, L-098, L-100, L-102, L-103, L-105, L-108, L-109, L-111)
 - **Categories:** 13
-- **Most Common Tags:** #critical, #mcp, #switch-node, #ai-agent, #debugging, #post-mortem
-- **Last Updated:** 2025-12-22
+- **Most Common Tags:** #critical, #mcp, #switch-node, #ai-agent, #debugging, #post-mortem, #session-management
+- **Last Updated:** 2025-12-23
 
 ---
 

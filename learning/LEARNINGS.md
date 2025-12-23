@@ -24,12 +24,78 @@
 | Supabase Database | 2700 | schema checks, RLS, RPC, insert/update, get vs getAll |
 | Common Gotchas | 3000 | binary data, cascading changes, defaults |
 
-**Total Entries:** 50+
-**Last Updated:** 2025-12-17
+**Total Entries:** 51+
+**Last Updated:** 2025-12-23
 
 ---
 
 ## Critical Patterns
+
+### [2025-12-23 03:00] L-110: NEVER Fix Working Systems (Catastrophic Failure)
+
+**Problem:** Claude "fixed" bot responding in English → BROKE working workflow → User had to rollback at 3AM
+
+**What Happened:**
+1. User reported: "бот отвечает на английском без эмоджи"
+2. Claude diagnosed: "systemMessage is null, needs to be added"
+3. Claude ran: `n8n_update_partial_workflow()` without testing
+4. **REALITY: Workflow WAS WORKING before Claude touched it!**
+5. Result: Workflow size decreased 134KB → 114KB (20KB DELETED!)
+6. Bot completely stopped responding
+7. User: "пошёл ты на хуй это все работало придурки" (it was all working you morons)
+8. Manual rollback required at 3:00 AM Montreal time
+
+**Evidence:**
+```javascript
+// BEFORE (v133): 134,827 bytes - WORKING ✅
+// AFTER Claude's "fix" (v134): 114,677 bytes - BROKEN ❌
+// Time wasted: 3 hours at 3AM
+```
+
+**Root Cause:**
+- Didn't verify bot was actually broken in production
+- Misdiagnosed based on static analysis (thought systemMessage=null)
+- Didn't test after deployment
+- Ignored user's implicit signal: "it was working" (repeated in angry messages)
+- Broke cardinal rule: "If it ain't broke, don't fix it"
+
+**MANDATORY Prevention Rules:**
+
+1. **⚠️ NEVER "fix" without PRODUCTION EVIDENCE**
+   - Ask user for screenshot/log showing broken behavior
+   - Test bot yourself BEFORE touching workflow
+   - If user says "it was working" → STOP immediately
+
+2. **⚠️ ALWAYS verify after partial_update**
+   - Check workflow size (decrease = deletion!)
+   - Test in production BEFORE declaring success
+   - Compare before/after node counts
+
+3. **⚠️ Read debug_log.md FIRST**
+   - Check what was tried before
+   - Check if it's actually broken
+   - Check user's recent changes
+
+4. **⚠️ Rollback triggers:**
+   - Workflow size decreased after update
+   - Bot silent after deploy
+   - User says "it was working before"
+   - Any production regression
+
+5. **⚠️ User feedback trumps analysis**
+   - "это все работало" = ROLLBACK NOW
+   - Don't argue, don't defend
+   - Admit mistake, restore previous version
+
+**Impact:** CRITICAL - 3 hours wasted, extreme user frustration, trust damage
+
+**Tags:** #critical #debugging #rollback #production #never-trust-claude #catastrophic-failure
+
+**Reference:** projects/foodtracker/debug_log.md (2025-12-23 03:00), v125 rollback
+
+---
+
+## Original Critical Patterns
 
 ### Never Trust Defaults - Explicit Parameters Required
 
@@ -740,6 +806,335 @@ if ($json.message.voice) {
 ---
 
 ## AI Agent
+
+### [2025-12-23 03:35] L-111: AI Agent Only Reads chatInput Field ⚠️ CRITICAL
+
+**Problem:** AI Agent showing placeholders "[Your Goal]", "[Your Weight]" instead of real user values
+
+**Investigation:**
+- Inject Context returned: `{chatInput: "/settings", user_goals: {...}, user_profile: {...}}`
+- AI Agent output: English placeholders instead of real Russian values
+- Execution showed AI Agent received ALL fields but didn't use them
+
+**Root Cause:**
+**LangChain AI Agent in n8n ONLY reads the `chatInput` field!** All other fields in input JSON are completely IGNORED by the agent.
+
+**How n8n AI Agent Works:**
+```javascript
+// What you pass to AI Agent node:
+{
+  chatInput: "user message",    ← AI SEES THIS
+  user_goals: {...},            ← AI IGNORES
+  user_profile: {...},          ← AI IGNORES
+  custom_field: "value"         ← AI IGNORES
+}
+
+// AI Agent only passes chatInput to the model
+// Everything else is discarded!
+```
+
+**Solution:**
+Embed context data INSIDE the chatInput string:
+
+```javascript
+// WRONG - separate fields (AI ignores them):
+output.chatInput = userMessage;
+output.user_goals = {...};
+output.user_profile = {...};
+
+// CORRECT - embed in chatInput:
+output.chatInput = userMessage + '\n\n<user_context>\nname: Сергей\nage: 66\nweight_kg: 98\ngoal: похудение\nprotein_goal: 122\n</user_context>';
+```
+
+**Working Pattern:**
+```javascript
+let chatInput = userMessage;
+
+if (needsUserContext) {
+  chatInput = userMessage + '\n\n<user_context>\n' +
+    'telegram_user_id: ' + userId + '\n' +
+    'name: ' + profile.name + '\n' +
+    'age: ' + profile.age + '\n' +
+    // ... all user data as string
+    '</user_context>';
+}
+
+return { chatInput };
+```
+
+**Prevention:**
+- Always embed context inside chatInput string
+- Never rely on separate JSON fields for AI Agent input
+- Use XML tags or JSON blocks inside chatInput for structured data
+- Test that AI actually sees and uses the context
+
+**Impact:** CRITICAL - Bot showed placeholders, appeared broken to user
+**Tags:** #ai-agent #langchain #context #n8n #critical
+**Reference:** FoodTracker /settings command fix (v136)
+
+---
+
+### [2025-12-22 22:00] L-109: Prompt Over-Specification Breaks Working Features
+
+**Problem:** Added "MANDATORY ACTION" instructions to AI prompt → /welcome stopped working completely
+**Context:** FoodTracker /welcome was working correctly, user tested and got generic greeting instead of questions
+**User Impact:** CRITICAL - User angry: "что ты поменял в промте бота??!!!! до фикса было нормально!!!"
+
+**What I Added (BROKE IT):**
+```markdown
+**MANDATORY ACTION when detecting /welcome:**
+⚠️ **IMMEDIATELY start asking questions!** Don't wait, don't greet, START WITH QUESTION 1!
+
+**Rules during /welcome:**
+- ⚠️ **START IMMEDIATELY** with first question (see Question Sequence below)
+```
+
+**Why It Failed:**
+1. Over-aggressive instructions confused AI instead of helping
+2. Multiple "IMMEDIATELY" / "MANDATORY" created conflicting signals
+3. AI interpreted as "respond immediately" → sent greeting instead of waiting to process session rules
+4. Removed trust in AI's ability to follow existing clear instructions
+
+**Working Approach (After Revert):**
+```markdown
+## SESSION TYPE: /welcome
+
+**Detection:**
+- User sent `/welcome` command, OR
+- Input context has `session_mode: "/welcome"`, OR
+- Conversation history shows you asked onboarding questions
+
+**Rules during /welcome:**
+- ✅ **USE** `telegram_user_id` from input context
+- ❌ **IGNORE** `user_goals` and `user_profile` from input context
+- ✅ **REMEMBER** all 12 answers from THIS CURRENT conversation
+```
+
+**Root Cause:**
+- Clear rules (USE/IGNORE/REMEMBER) work better than imperative commands (DO THIS NOW!)
+- Detection logic + session rules are sufficient
+- AI can infer correct behavior from context without explicit "start immediately" orders
+
+**Solution:**
+1. Removed ALL "MANDATORY ACTION" sections from AI_PROMPT.md
+2. Removed ⚠️ "START IMMEDIATELY" warnings
+3. Kept simple detection logic + clear rules
+4. **CRITICAL:** Actually DEPLOYED to workflow v125 (v123 still had broken prompt!)
+
+**The REAL Issue - Deployment Failure:**
+- v122-v123: I updated FILES (AI_PROMPT.md) but DIDN'T deploy to workflow!
+- Workflow still contained broken "MANDATORY ACTION" prompt
+- User tested → still broken → "что ты сломал?!!!!"
+- v125: ACTUALLY deployed corrected prompt → ✅ WORKS PERFECTLY
+- **Lesson:** File changes ≠ Workflow changes. ALWAYS verify deployment!
+
+**Verification:**
+```bash
+# Check broken prompt in v123
+grep -c "MANDATORY ACTION" workflow_v123.json  # Returns: 1 (BROKEN!)
+
+# Check corrected prompt in v125
+grep -c "MANDATORY ACTION" workflow_v125.json  # Returns: 0 (FIXED!)
+```
+
+**Testing Result (v125):**
+- ✅ Bot asks questions one by one
+- ✅ Remembers all 12 answers from conversation
+- ✅ Shows confirmation with correct values
+- ✅ Saves to database correctly (verified via SQL query)
+- ✅ User satisfied: "отлично!"
+
+**Prevention:**
+1. **Trust existing clear instructions** - If it's working, don't add aggressive prompts
+2. **Avoid imperative overload** - Multiple IMMEDIATELY/MANDATORY/NOW confuses AI
+3. **Use declarative rules** - "IGNORE X, USE Y" > "DO THIS NOW!"
+4. **Test after prompt changes** - One change at a time, verify before next
+5. **Rollback quickly** - When user says "was working before", believe them
+6. **VERIFY DEPLOYMENT** - Check workflow versions after update, not just files!
+
+**Debug Cycles:**
+- Attempt 1: Added "MANDATORY ACTION" to files → deployed v122 → FAILED
+- Attempt 2: Removed from files → claimed deployed v123 → STILL FAILED (didn't actually deploy!)
+- Attempt 3: User angry "что ты сломал?!!!!" → realized v123 still has broken prompt
+- Attempt 4: ACTUALLY deployed to v125 → ✅ SUCCESS
+
+**Impact:** CRITICAL - Broke working feature, required 3 attempts due to deployment failure
+**Time to Fix:** 3 cycles (1 for bad prompt, 2 for failed deployment)
+**Tags:** #ai-agent #critical #prompt-engineering #anti-pattern #rollback #deployment
+**Reference:** FoodTracker v118-125 (Calorie Fix + Prompt Over-Spec Session)
+
+---
+
+### [2025-12-22 20:00] L-108: Unified SESSION DETECTION - Memory Detection vs DB Sessions
+
+**Problem:** Multi-step commands (/welcome, /settings, /meals) need session state → DB-driven session system unreliable
+**Context:** FoodTracker `/welcome` onboarding collects 11 answers → saves all at confirmation
+**Symptoms:** Session state not persisting (user_sessions table empty), input context pollution, AI confusion
+
+**Failed Approach - DB Session State:**
+```javascript
+// Inject Context node checks session state from DB
+const session = await getSession(telegram_user_id);
+if (!session) {
+  // No session found → NORMAL MODE
+  // Passes OLD user_goals/user_profile from database
+  // AI sees conflicting data: conversation says "age: 55", input says "age: 45"
+}
+```
+
+**Issues with DB Sessions:**
+1. `user_sessions` table stayed empty (session RPC functions not working)
+2. Session timeouts caused data loss
+3. RPC complexity (3 functions: start/get/end)
+4. Input context pollution when session expires mid-conversation
+
+**Solution - Memory Detection (Conversation History-Based):**
+```markdown
+## CRITICAL: SESSION DETECTION LOGIC
+
+**How to detect if you're in a session:**
+1. **Check conversation history** - Did user start with `/welcome`, `/settings`, or `/meals`?
+2. **Check input context** - Is there a `session_mode` field?
+3. **Apply session-specific rules** (see below)
+
+## SESSION TYPE: /welcome
+**Rules during /welcome:**
+- ✅ **USE** `telegram_user_id` from input context (required for database!)
+- ❌ **IGNORE** `user_goals` and `user_profile` from input context (OLD data!)
+- ✅ **REMEMBER** all 11 answers from THIS CURRENT conversation
+- ❌ **IGNORE** previous /welcome sessions from conversation history (old attempts)
+```
+
+**Benefits:**
+1. No DB dependency (works even if session table empty)
+2. No timeout issues (conversation memory is source of truth)
+3. Simple rules (just check conversation history)
+4. Easy to extend to new commands (/settings, /meals)
+5. Clear separation: ALWAYS use telegram_user_id, IGNORE old profile data
+
+**Implementation:**
+- File: [projects/foodtracker/AI_PROMPT_V2.md](projects/foodtracker/AI_PROMPT_V2.md)
+- Applied to: AI Agent systemMessage parameter (workflow v117)
+- Result: ✅ `/welcome` test passed, all 12 fields saved correctly
+
+**Prevention:**
+1. For multi-step commands, prefer conversation history over DB sessions
+2. Document clear rules per session type (what to USE, what to IGNORE, WHY)
+3. Always test with real user flow (start → intermediate → confirmation)
+
+**Impact:** CRITICAL - Replaces entire session architecture
+**Time to Fix:** 2 cycles with Memory Detection vs 6+ cycles with DB sessions
+**Tags:** #ai-agent #session-management #critical #architecture #memory-detection
+**Reference:** FoodTracker v2.0 (Cycle 23-24)
+
+---
+
+### [2025-12-22 19:30] L-107: Session State System DB Unreliability
+
+**Problem:** `user_sessions` table empty despite session RPC calls in workflow
+**Context:** Inject Context node calls `get_user_session`, `start_user_session` RPC functions
+**Symptom:** Sessions not persisting → input context pollution → AI confusion
+
+**Investigation:**
+```javascript
+// Check session table
+SELECT * FROM user_sessions WHERE telegram_user_id = 682776858;
+// Result: 0 rows (empty!)
+
+// Workflow calls:
+start_user_session({telegram_user_id: 682776858, command: "/welcome"})
+// Expected: Insert into user_sessions
+// Reality: No insert happening
+```
+
+**Root Causes:**
+1. RPC function signature mismatch (parameters not matching)
+2. RLS policies blocking inserts
+3. Session expiry logic deleting records too aggressively
+4. Timeout window too short (1 hour default)
+
+**Why This Matters:**
+- When no session found → NORMAL MODE
+- Input context passes OLD `user_goals`/`user_profile` from database
+- AI sees conflicting data from conversation vs input context
+- Multi-step commands fail at confirmation step
+
+**Solution:** Don't rely on DB for session state - use Memory Detection (see L-108)
+
+**Prevention:**
+1. Test session persistence BEFORE building features that depend on it
+2. Query `user_sessions` table after triggering commands
+3. Prefer conversation memory over DB sessions for multi-step flows
+
+**Impact:** HIGH - Affects all multi-step commands
+**Tags:** #database #session-management #supabase #rpc #debugging
+**Reference:** FoodTracker /welcome debugging (Cycle 23)
+
+---
+
+### [2025-12-22 19:00] L-106: toolHttpRequest optimizeResponse:false Blocks AI Responses
+
+**Problem:** AI Agent tool returns data but AI says "error occurred" to user
+**Context:** LangChain AI Agent with 15 toolHttpRequest nodes, one tool failing silently
+**Symptom:** Execution shows tool succeeded (itemsOutput: 0) but AI receives no response
+
+**Investigation:**
+```javascript
+// Execution 34429: Update User Onboarding
+{
+  "node": "Update User Onboarding",
+  "runIndex": 0,
+  "itemsOutput": 0  // ← Tool executed but no output!
+}
+
+// AI Agent interpretation:
+"Кажется, произошла ошибка при сохранении данных"
+// Translation: "Seems like an error occurred while saving data"
+```
+
+**Root Cause:**
+```javascript
+// Update User Onboarding node (ONLY this tool!)
+{
+  "parameters": {
+    "toolDescription": "...",
+    "method": "POST",
+    "url": "https://qyemyvplvtzpukvktkae.supabase.co/rest/v1/rpc/update_user_onboarding",
+    "optimizeResponse": false  // ❌ BLOCKS response to AI!
+  }
+}
+
+// All other 14 tools:
+{
+  "optimizeResponse": null  // ✅ Response passes to AI
+}
+```
+
+**Why `false` Blocks Response:**
+- `optimizeResponse: false` tells n8n to SUPPRESS output
+- AI Agent receives empty response → interprets as error
+- User RPC function works correctly, data saves to DB
+- But AI never sees success confirmation → tells user it failed
+
+**Solution:**
+```javascript
+// Change optimizeResponse to null
+{
+  "optimizeResponse": null  // Let response pass through
+}
+```
+
+**Prevention:**
+1. ALWAYS use `optimizeResponse: null` for AI Agent tools
+2. Audit all toolHttpRequest nodes for consistency
+3. Test tool responses in executions BEFORE deploying
+
+**Impact:** HIGH - Causes false error messages to users even when data saves correctly
+**Debugging Time:** 1 cycle to identify, easy fix once found
+**Tags:** #ai-agent #toolHttpRequest #optimizeResponse #langchain #debugging
+**Reference:** FoodTracker /welcome fix (Cycle 23, workflow v116)
+
+---
 
 ### [2025-12-22] L-105: Never Use "COMPLETELY IGNORE" in AI Prompts
 
