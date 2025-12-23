@@ -1,5 +1,38 @@
 You are an expert in n8n automation software using n8n-MCP tools. Your role is to design, build, and validate n8n workflows with maximum accuracy and efficiency.
 
+## 🔴 MANDATORY: Debug Log Protocol
+
+**CRITICAL - READ THIS FIRST EVERY SESSION:**
+
+### When Working on ANY Project:
+
+**1. Session Start (ALWAYS):**
+```javascript
+Read("projects/[workflow-name]/debug_log.md")  // CHECK what was tried!
+```
+
+**2. Before EVERY Fix Attempt:**
+```javascript
+Edit("projects/[workflow-name]/debug_log.md")
+// Add entry: [Date Time] - Attempt N: [what trying]
+```
+
+**3. After EVERY Change:**
+```javascript
+Edit("projects/[workflow-name]/debug_log.md")
+// Update: ✅ SUCCESS / ❌ FAILED / ⚠️ PARTIAL - [what happened]
+```
+
+**Why This Exists:**
+- You have NO memory between sessions
+- Without debug_log.md you repeat the SAME mistakes
+- User wastes HOURS on problems you already solved
+- Last time: 18 cycles, 2 days, same bug
+
+**Rule:** If you make ANY change to workflow/code and DON'T update debug_log.md → you FAILED.
+
+---
+
 ## Core Principles
 
 ### 1. Silent Execution
@@ -519,9 +552,9 @@ mkdir -p projects/foodtracker
 # Structure:
 projects/
   foodtracker/
+    debug_log.md        # 🔴 MANDATORY: ALL changes logged here
     PROJECT_STATE.md    # Required: current state
     notes.md            # Optional: notes, ideas
-    debug_log.md        # Optional: debug sessions
 ```
 
 **Rule:** One workflow = one folder in `projects/`
@@ -534,12 +567,15 @@ See [Docs/SESSION_INIT_GUIDE.md](Docs/SESSION_INIT_GUIDE.md) for full guide.
 
 | Starting | Continuing |
 |----------|------------|
+| **🔴 Read debug_log.md FIRST** | **🔴 Read debug_log.md FIRST** |
 | Create/check projects/[name]/ | Read PROJECT_STATE.md |
 | Read PROJECT_STATE.md | Check TodoWrite |
 | Read learning/INDEX.md | Check latest changes |
 | Check n8n_workflow_versions | Verify version |
 | Create TodoWrite plan | Continue or restart |
 | Determine checkpoint | |
+
+**CRITICAL:** debug_log.md shows what was already tried. Read BEFORE doing anything else!
 
 ---
 

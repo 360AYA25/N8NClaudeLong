@@ -2,6 +2,50 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.10.0] - 2025-12-22
+
+### debug_log.md Protocol - MANDATORY Enforcement
+
+**Problem:** Claude not reading/updating debug_log.md despite having rules. Last entry was 3 days ago. User working since 03:00 on same issues with nothing recorded.
+
+**Root Cause:** Rules existed but not prominent - easy to skip during session start.
+
+**Solution:** Made debug_log.md IMPOSSIBLE to miss.
+
+### Added
+
+**New Section in CLAUDE.md (Line 3):**
+- 🔴 MANDATORY: Debug Log Protocol - placed BEFORE Core Principles
+- Session Start (ALWAYS): Read debug_log.md first
+- Before EVERY Fix: Record attempt in debug_log.md
+- After EVERY Change: Update with ✅/❌/⚠️ result
+- "Why This Exists" explanation (18 cycles, 2 days example)
+
+**Session Start Checklist:**
+- 🔴 Read debug_log.md FIRST - added as first row in both columns
+- CRITICAL warning: "shows what was already tried"
+
+### Changed
+
+- **CLAUDE.md:**
+  - Project structure: debug_log.md changed from "Optional" to "🔴 MANDATORY"
+  - Moved to TOP of file list (before PROJECT_STATE.md)
+
+- **SESSION_INIT_GUIDE.md:**
+  - New Шаг 1: "Read debug_log.md ПЕРВЫМ ДЕЛОМ" (was Шаг 2)
+  - All subsequent steps renumbered (2→3, 3→4, etc.)
+  - Added "Why This Exists" section with memory loss explanation
+
+- **projects/foodtracker/debug_log.md:**
+  - Added entry for 2025-12-22 session (schema system + debug_log enforcement)
+
+### Impact
+
+**Before:** Easy to skip debug_log.md → repeat same mistakes → hours wasted
+**After:** FIRST thing in checklist → impossible to miss → track all attempts
+
+---
+
 ## [1.9.0] - 2025-12-22
 
 ### AI Prompt Documentation System
