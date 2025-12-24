@@ -2032,7 +2032,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://api.telegram.org/bot7845235205:AAE4HAGPesDOzk-wU2Gl5qI87nkkLnjoQIs/sendMessage",
+        "url": "https://api.telegram.org/bot{{ env.TELEGRAM_BOT_TOKEN }}/sendMessage",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ chat_id: $node[\"Telegram Trigger\"].json.message.chat.id, text: $node[\"Strip Signature\"].json.output || $node[\"Simple Reply\"].json.output, reply_markup: { keyboard: [[{ text: \"➡️ Добавить блюдо\" }]], resize_keyboard: true, one_time_keyboard: false } }) }}",
@@ -4900,7 +4900,7 @@
       {
         "parameters": {
           "method": "POST",
-          "url": "https://api.telegram.org/bot7845235205:AAE4HAGPesDOzk-wU2Gl5qI87nkkLnjoQIs/sendMessage",
+          "url": "https://api.telegram.org/bot{{ env.TELEGRAM_BOT_TOKEN }}/sendMessage",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ chat_id: $node[\"Telegram Trigger\"].json.message.chat.id, text: $node[\"Strip Signature\"].json.output || $node[\"Simple Reply\"].json.output, reply_markup: { keyboard: [[{ text: \"➡️ Добавить блюдо\" }]], resize_keyboard: true, one_time_keyboard: false } }) }}",
