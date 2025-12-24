@@ -12,6 +12,7 @@
 | Issue | Line | When to Check |
 |-------|------|---------------|
 | **L-110 NEVER fix working systems** | **34** | **BEFORE touching ANY production workflow** |
+| **L-112 DOT NOTATION for updateNode** | **214** | **BEFORE any n8n_update_partial_workflow** |
 | Set Node ={{ syntax | 32 | Before any Set Node config |
 | IF Node branch param | 146 | Before IF connections |
 | Switch duplicates | 517 | After Switch routing changes |
@@ -71,12 +72,13 @@
 | L-100 | 649 | Telegram Reply Keyboard (HTTP Request) | CRITICAL |
 | L-101 | 623 | HTTP Request credential expression | MEDIUM |
 | L-102 | 1276 | Cascading changes - test each | HIGH |
+| L-112 | 214 | DOT NOTATION required for updateNode (catastrophic fix) | CRITICAL |
 
 ### By Tag
 
 | Tag | Lines | Description |
 |-----|-------|-------------|
-| #critical | 32, 199, 248, 297, 574, 649, 751, 871, 896, 1258, 1276 | Critical issues - check first |
+| #critical | 32, 199, 214, 248, 297, 574, 649, 751, 871, 896, 1258, 1276 | Critical issues - check first |
 | #mcp | 146-460 | MCP operations and tools |
 | #addConnection | 146, 174, 199 | Connection management |
 | #branch | 146, 174 | IF/Switch branch routing |
@@ -91,6 +93,8 @@
 | #anti-loop | 914-1013 | Anti-loop protocol |
 | #binary-data | 1258 | Binary data handling |
 | #debugging | 174, 248, 297, 871-1040 | Debugging techniques |
+| #dot-notation | 214 | DOT NOTATION for updateNode (L-112) |
+| #updateNode | 214 | n8n_update_partial_workflow updateNode |
 
 ---
 
@@ -181,11 +185,11 @@ Edit("learning/LEARNINGS.md",
 
 ## 📊 Statistics
 
-- **Total Lines:** 1,753
-- **Total Entries:** 58
-- **Critical Issues:** 16 (L-004, L-006, L-007, L-008, L-060, L-067, L-068, L-097, L-098, L-100, L-102, L-103, L-105, L-108, L-109, L-111)
+- **Total Lines:** 1,820+
+- **Total Entries:** 59
+- **Critical Issues:** 17 (L-004, L-006, L-007, L-008, L-060, L-067, L-068, L-097, L-098, L-100, L-102, L-103, L-105, L-108, L-109, L-111, L-112)
 - **Categories:** 13
-- **Most Common Tags:** #critical, #mcp, #switch-node, #ai-agent, #debugging, #post-mortem, #session-management
+- **Most Common Tags:** #critical, #mcp, #switch-node, #ai-agent, #debugging, #dot-notation, #updateNode
 - **Last Updated:** 2025-12-23
 
 ---

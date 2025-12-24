@@ -211,6 +211,73 @@ grep -n "user_id" workflow.json
 
 ## MCP Operations
 
+### [2025-12-23 12:00] L-112: DOT NOTATION Required for updateNode (Catastrophic Fix)
+
+**Problem:** Claude's `updateNode` with nested object deleted 20KB of workflow data
+
+**What Happened:**
+```javascript
+// ❌ WHAT CLAUDE DID (WRONG):
+n8n_update_partial_workflow({
+  operations: [{
+    type: "updateNode",
+    nodeId: "ai-agent-001",
+    updates: {
+      parameters: {                    // ← Nested object
+        systemMessage: "new prompt"
+      }
+    }
+  }]
+})
+// Result: 134,827 bytes → 114,677 bytes (20KB DELETED!)
+// Bot completely stopped working
+// User had to manually rollback at 3AM
+```
+
+**Root Cause:**
+When you pass `parameters` as a nested object, n8n-mcp **REPLACES the entire object**, not just the specified field. All other parameters in that object are DELETED.
+
+**Solution - DOT NOTATION:**
+```javascript
+// ✅ CORRECT - Only changes systemMessage:
+n8n_update_partial_workflow({
+  operations: [{
+    type: "updateNode",
+    nodeId: "ai-agent-001",
+    updates: {
+      "parameters.systemMessage": "new prompt"  // DOT NOTATION!
+    }
+  }]
+})
+// Result: Only systemMessage changes, everything else preserved
+```
+
+**DOT NOTATION Examples:**
+| Field | Wrong ❌ | Correct ✅ |
+|-------|---------|-----------|
+| AI prompt | `{parameters: {systemMessage}}` | `{"parameters.systemMessage"}` |
+| HTTP URL | `{parameters: {url}}` | `{"parameters.url"}` |
+| Options | `{parameters: {options: {x}}}` | `{"parameters.options.x"}` |
+| Code | `{parameters: {jsCode}}` | `{"parameters.jsCode"}` |
+
+**Mandatory Verification:**
+1. Record workflow size BEFORE update
+2. Use DOT NOTATION for ALL parameter changes
+3. Check workflow size AFTER update
+4. If size decreased >100 bytes → IMMEDIATE ROLLBACK
+
+**Prevention:**
+- NEVER use nested objects in `updates`
+- ALWAYS use dot notation: `"parameters.fieldName"`
+- Check workflow size before/after every update
+- Rollback immediately if size decreases
+
+**Impact:** CRITICAL - Causes complete workflow failure, data loss, requires manual rollback
+**Tags:** #critical #mcp #updateNode #dot-notation #catastrophic #data-loss
+**Reference:** projects/foodtracker/debug_log.md (2025-12-23 03:00), CLAUDE.md Node Modification Protocol
+
+---
+
 ### [2025-12-17 12:00] addConnection requires 4 string parameters
 
 **Problem:** Error "Expected string, received object" when adding connection

@@ -2,6 +2,75 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.0] - 2025-12-23
+
+### Node Modification Protocol (L-112) - DOT NOTATION Enforcement
+
+**Problem:** Claude's `updateNode` with nested objects caused catastrophic 20KB data loss (v134: 134KB → 114KB). Using `updates: { parameters: { field: "..." } }` REPLACES entire parameters object instead of merging.
+
+**Root Cause:** Shallow merge behavior in `n8n_update_partial_workflow`. Nested objects replace, don't merge.
+
+**Solution:** Mandatory DOT NOTATION protocol with pre/post size verification.
+
+### Added
+
+**New Section in CLAUDE.md:**
+- 🔴 Node Modification Protocol (MANDATORY - L-112) - after Batch Operations
+- The Problem: Nested objects example with 20KB loss
+- The Solution: DOT NOTATION examples
+- Mandatory Rules table (DOT NOTATION, size checks, rollback triggers)
+- Pre-Update Checklist (get size, record, use dot notation)
+- Post-Update Verification (size check, rollback if decreased)
+- DOT NOTATION Examples table (5 common cases)
+- Reference to Protected Nodes in ARCHITECTURE.md
+
+**New Entry in learning/LEARNINGS.md:**
+- L-112: DOT NOTATION Required for updateNode (Catastrophic Fix)
+- Problem description with code example
+- Root cause explanation
+- DOT NOTATION solution with examples table
+- Mandatory verification steps (4-step checklist)
+- Prevention rules
+- Tags: #critical #mcp #updateNode #dot-notation #catastrophic #data-loss
+
+**New Section in projects/foodtracker/ARCHITECTURE.md:**
+- Protected Nodes (L-112)
+- High-Risk Nodes table (AI Agent, Inject Context, OpenAI Model, Memory)
+- Medium-Risk Nodes table (Switch, Check User, Process Text)
+- Modification Checklist (size check workflow)
+- Size History reference table (v133→v134→v136)
+
+**New Section in learning/CODE_EXAMPLES.md:**
+- DOT NOTATION for updateNode (L-112 CRITICAL)
+- Wrong (CATASTROPHIC) example with warning
+- Correct (DOT NOTATION) example
+- 5 common field examples (AI prompt, HTTP URL, options, code, multiple fields)
+
+### Changed
+
+**learning/INDEX.md:**
+- Added L-112 to Critical Issues table (2nd position after L-110)
+- Added L-112 to By Learning ID table
+- Added new tags: #dot-notation, #updateNode
+- Updated statistics: 59 entries (was 58), 17 critical (was 16)
+- Updated #critical tag line numbers to include 214
+
+### Impact
+
+**Before:** Nested objects in `updates` → 20KB data deletion → bot completely broken → manual rollback at 3AM
+
+**After:** DOT NOTATION mandatory → size verification → automatic rollback → isolated field changes only
+
+### Protection Layers
+
+1. **CLAUDE.md** - Protocol with mandatory rules and examples
+2. **LEARNINGS.md** - L-112 entry with detailed explanation
+3. **ARCHITECTURE.md** - Protected Nodes list with size history
+4. **CODE_EXAMPLES.md** - Copy-paste DOT NOTATION examples
+5. **INDEX.md** - Quick lookup (line 214, critical issue #2)
+
+---
+
 ## [1.10.0] - 2025-12-22
 
 ### debug_log.md Protocol - MANDATORY Enforcement

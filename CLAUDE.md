@@ -237,6 +237,110 @@ n8n_update_partial_workflow({id: "wf-123", operations: [{...}]})
 
 **Full examples:** [learning/CODE_EXAMPLES.md](learning/CODE_EXAMPLES.md#addconnection-syntax)
 
+---
+
+## 🔴 Node Modification Protocol (MANDATORY - L-112)
+
+⚠️ **ROOT CAUSE OF 20KB DATA LOSS:** Using nested objects instead of dot notation in `updateNode`
+
+### The Problem
+
+```javascript
+// ❌ CATASTROPHIC - DELETES ALL OTHER PARAMETERS:
+n8n_update_partial_workflow({
+  operations: [{
+    type: "updateNode",
+    nodeId: "ai-agent-001",
+    updates: {
+      parameters: {                    // ← Nested object
+        systemMessage: "new prompt"    // ← REPLACES entire parameters!
+      }
+    }
+  }]
+})
+// Result: 134KB → 114KB (20KB of other parameters DELETED!)
+```
+
+### The Solution: DOT NOTATION
+
+```javascript
+// ✅ CORRECT - Changes ONLY the specified field:
+n8n_update_partial_workflow({
+  operations: [{
+    type: "updateNode",
+    nodeId: "ai-agent-001",
+    updates: {
+      "parameters.systemMessage": "new prompt"  // ← DOT NOTATION
+    }
+  }]
+})
+// Result: Only systemMessage changes, everything else preserved
+```
+
+### Mandatory Rules
+
+| Rule | Description |
+|------|-------------|
+| **DOT NOTATION ONLY** | Never use nested objects in `updates`. Always `"parameters.field"` |
+| **Pre-Update Size Check** | Record workflow size BEFORE any update |
+| **Post-Update Verification** | If size decreased >100 bytes → IMMEDIATE ROLLBACK |
+| **Single Field Changes** | Change ONE field per operation when debugging |
+
+### Pre-Update Checklist
+
+```javascript
+// BEFORE any n8n_update_partial_workflow:
+
+// 1. Get current workflow size
+const before = await n8n_get_workflow({id: WORKFLOW_ID, mode: "structure"});
+const beforeSize = JSON.stringify(before).length;
+
+// 2. Record in debug_log.md:
+// "PRE-UPDATE: Workflow size = X bytes, changing node Y field Z"
+
+// 3. Use DOT NOTATION:
+updates: { "parameters.systemMessage": "..." }  // ✅
+updates: { parameters: { systemMessage: "..." } }  // ❌ NEVER!
+```
+
+### Post-Update Verification
+
+```javascript
+// AFTER any n8n_update_partial_workflow:
+
+// 1. Get new workflow size
+const after = await n8n_get_workflow({id: WORKFLOW_ID, mode: "structure"});
+const afterSize = JSON.stringify(after).length;
+
+// 2. SIZE CHECK - CRITICAL!
+if (afterSize < beforeSize - 100) {
+  // 🚨 ROLLBACK IMMEDIATELY!
+  n8n_workflow_versions({mode: "rollback", workflowId: WORKFLOW_ID})
+  // Record: "ROLLBACK: Size decreased from X to Y bytes"
+}
+
+// 3. Verify target field changed
+// 4. Verify other fields unchanged
+```
+
+### DOT NOTATION Examples
+
+| Change | Wrong ❌ | Correct ✅ |
+|--------|---------|-----------|
+| AI prompt | `{parameters: {systemMessage: "..."}}` | `{"parameters.systemMessage": "..."}` |
+| HTTP URL | `{parameters: {url: "..."}}` | `{"parameters.url": "..."}` |
+| Node name | `{name: "New Name"}` | `{name: "New Name"}` (OK - top level) |
+| Nested option | `{parameters: {options: {timeout: 5000}}}` | `{"parameters.options.timeout": 5000}` |
+| Code node | `{parameters: {jsCode: "..."}}` | `{"parameters.jsCode": "..."}` |
+
+### Protected Nodes
+
+See [ARCHITECTURE.md](projects/foodtracker/ARCHITECTURE.md#protected-nodes) for list of critical nodes that require extra caution.
+
+**Reference:** L-112 in [learning/LEARNINGS.md](learning/LEARNINGS.md)
+
+---
+
 ## Important Rules
 
 ### Core Behavior

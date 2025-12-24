@@ -223,6 +223,55 @@ const isWelcomeCommand = userMessage === '/welcome';  // ONLY first message!
 
 ---
 
+## Protected Nodes (L-112)
+
+⚠️ **CRITICAL:** These nodes require DOT NOTATION for any parameter changes. See [CLAUDE.md Node Modification Protocol](../../CLAUDE.md#-node-modification-protocol-mandatory---l-112).
+
+### High-Risk Nodes (NEVER modify without verification)
+
+| Node ID | Name | Protected Fields | Safe to Modify |
+|---------|------|------------------|----------------|
+| `cdfe74df-5815-4557-bf8f-f0213d9ca8ad` | AI Agent | ALL parameters | `"parameters.systemMessage"` ONLY via dot notation |
+| `inject-context-001` | Inject Context | `parameters.jsCode` | Full replacement only, never partial |
+| `18d2242f-51eb-48c9-8d1c-1fef81ce9974` | OpenAI Chat Model | Model config | `"parameters.model"`, `"parameters.temperature"` |
+| `memory-buffer-node-001` | Conversation Memory | Session config | `"parameters.contextWindowLength"` |
+
+### Medium-Risk Nodes
+
+| Node ID | Name | Risk | Modification Rule |
+|---------|------|------|-------------------|
+| Switch | Route by type | Multi-output | Check ALL output connections after change |
+| Check User | Supabase query | Auth | Verify user lookup still works |
+| Process Text | Code node | Data extraction | Test ALL input paths |
+
+### Modification Checklist
+
+Before modifying ANY protected node:
+
+```bash
+# 1. Record current workflow size
+n8n_get_workflow({id: "sw3Qs3Fe3JahEbbW", mode: "structure"})
+# Note: beforeSize = XXX bytes
+
+# 2. Use DOT NOTATION only
+updates: { "parameters.systemMessage": "..." }  # ✅
+updates: { parameters: { systemMessage: "..." } }  # ❌ NEVER!
+
+# 3. Verify after update
+# Check: afterSize >= beforeSize - 100
+# If size decreased → ROLLBACK IMMEDIATELY
+```
+
+### Size History (Reference)
+
+| Version | Size | Status | Notes |
+|---------|------|--------|-------|
+| v133 | 134,827 bytes | ✅ Working | Before Claude's intervention |
+| v134 | 114,677 bytes | ❌ Broken | 20KB deleted by wrong updateNode |
+| v136 | ~135,000 bytes | ✅ Working | Current canonical version |
+
+---
+
 ## Database Schema (users table)
 
 | Column | Type | Used By |

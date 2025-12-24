@@ -56,14 +56,75 @@ search_templates({searchMode: 'by_metadata', maxSetupMinutes: 60})
 
 ---
 
+## DOT NOTATION for updateNode (L-112 CRITICAL)
+
+⚠️ **NEVER use nested objects in `updates` - causes 20KB data loss!**
+
+### Wrong (CATASTROPHIC):
+```javascript
+// ❌ DELETES all other parameters!
+n8n_update_partial_workflow({
+  id: "wf-id",
+  operations: [{
+    type: "updateNode",
+    nodeId: "ai-agent-001",
+    updates: {
+      parameters: {                  // Nested object
+        systemMessage: "new text"    // REPLACES entire parameters!
+      }
+    }
+  }]
+})
+// Result: 134KB → 114KB (20KB DELETED!)
+```
+
+### Correct (DOT NOTATION):
+```javascript
+// ✅ Changes ONLY systemMessage:
+n8n_update_partial_workflow({
+  id: "wf-id",
+  operations: [{
+    type: "updateNode",
+    nodeId: "ai-agent-001",
+    updates: {
+      "parameters.systemMessage": "new text"  // DOT NOTATION!
+    }
+  }]
+})
+// Result: Only systemMessage changes
+```
+
+### Examples:
+```javascript
+// AI Agent prompt:
+updates: { "parameters.systemMessage": "..." }
+
+// HTTP URL:
+updates: { "parameters.url": "https://..." }
+
+// Nested option:
+updates: { "parameters.options.timeout": 5000 }
+
+// Code node:
+updates: { "parameters.jsCode": "const x = 1;" }
+
+// Multiple fields (same node):
+updates: {
+  "parameters.systemMessage": "...",
+  "parameters.options.temperature": 0.7
+}
+```
+
+---
+
 ## Batch Operations
 
 ```json
 n8n_update_partial_workflow({
   id: "workflow-id",
   operations: [
-    {type: "updateNode", nodeId: "node-1", changes: {...}},
-    {type: "updateNode", nodeId: "node-2", changes: {...}},
+    {type: "updateNode", nodeId: "node-1", updates: {...}},
+    {type: "updateNode", nodeId: "node-2", updates: {...}},
     {type: "cleanStaleConnections"}
   ]
 })
