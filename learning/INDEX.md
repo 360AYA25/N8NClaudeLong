@@ -11,90 +11,95 @@
 
 | Issue | Line | When to Check |
 |-------|------|---------------|
-| **L-110 NEVER fix working systems** | **34** | **BEFORE touching ANY production workflow** |
-| **L-112 DOT NOTATION for updateNode** | **214** | **BEFORE any n8n_update_partial_workflow** |
-| Set Node ={{ syntax | 32 | Before any Set Node config |
-| IF Node branch param | 146 | Before IF connections |
-| Switch duplicates | 517 | After Switch routing changes |
-| addConnection 4-param | 146 | Before any addConnection |
-| L-067 two-step exec | 871 | Before analyzing >10 node workflows |
-| L-009 nullable types | 803 | AI Agent tool optional params fail |
-| L-008 duplicate connections | 297 | Switch routes to wrong handler |
-| L-007 sequential eval | 248 | Switch fails on missing fields |
-| L-006 reorder conditions | 199 | Switch routing after reorder |
-| L-005 Code variables | 461 | Code node "variable not defined" |
-| L-004 IF branch missing | 174 | IF connection but node doesn't execute |
-| L-109 prompt over-spec | 744 | Before adding aggressive AI prompt instructions |
+| **L-113 AI Prompt Token Economy** | **34** | **BEFORE writing/editing AI_PROMPT.md** |
+| **L-110 NEVER fix working systems** | **102** | **BEFORE touching ANY production workflow** |
+| **L-112 DOT NOTATION for updateNode** | **280** | **BEFORE any n8n_update_partial_workflow** |
+| Set Node ={{ syntax | 98 | Before any Set Node config |
+| IF Node branch param | 212 | Before IF connections |
+| Switch duplicates | 583 | After Switch routing changes |
+| addConnection 4-param | 212 | Before any addConnection |
+| L-067 two-step exec | 937 | Before analyzing >10 node workflows |
+| L-009 nullable types | 869 | AI Agent tool optional params fail |
+| L-008 duplicate connections | 363 | Switch routes to wrong handler |
+| L-007 sequential eval | 314 | Switch fails on missing fields |
+| L-006 reorder conditions | 265 | Switch routing after reorder |
+| L-005 Code variables | 527 | Code node "variable not defined" |
+| L-004 IF branch missing | 240 | IF connection but node doesn't execute |
+| L-109 prompt over-spec | 810 | Before adding aggressive AI prompt instructions |
 
 ### By Category
 
 | Category | Line | Entries | Key Topics |
 |----------|------|---------|------------|
-| **Critical Patterns** | 32 | 5 | Never Trust Defaults, Set ={{, IF conditions, HTTP continueOnFail, Cascading changes |
-| **MCP Operations** | 146 | 6 | addConnection (4-param, branch, case), L-004, L-006, L-007, L-008 |
-| **Node Configuration** | 461 | 3 | expressions, parameters, L-005 Code variables, data access syntax |
-| **Switch Node** | 517 | 3 | L-006 reorder, L-007 sequential eval, L-008 duplicates, fan-out |
-| **Code Node** | 560 | 3 | L-005 variables, L-060 deprecated syntax, regex escaping |
-| **HTTP Request** | 599 | 3 | continueOnFail, L-101 credentials, status codes |
-| **Telegram Bot** | 639 | 5 | L-100 Reply Keyboard (HTTP), L-097 fixedCollection, webhooks, message types |
-| **AI Agent** | 808 | 13 | L-111 chatInput only, L-109 prompt over-specification, L-108 Memory Detection, L-107 DB session unreliable, L-106 optimizeResponse:false, L-105 never "IGNORE", L-104 quality gates, L-103 cascading, L-098 memory, L-009 nullable |
-| **Execution & Debugging** | 871 | 4 | L-067 two-step mode, anti-loop protocol, cycle limits, escalation |
-| **Validation Errors** | 1041 | 4 | Never Trust Defaults, L-053 false positive, L-054 QA override, schema mismatch |
-| **Notion Integration** | 1084 | 6 | Null-check dates, multi-user filters, timezone bug, page objects, Single Source of Truth |
-| **Supabase Database** | 1175 | 5 | Schema verification, get vs getAll, NOT NULL fields, RPC signatures, RLS policies |
-| **Common Gotchas** | 1258 | 4 | L-068 binary data, L-102 cascading changes, parameter changes, Never Trust Defaults |
+| **Critical Patterns** | 98 | 6 | L-113 AI Prompt Token Economy, L-110 Never Fix Working, L-112 DOT NOTATION, Never Trust Defaults, Set ={{, IF conditions |
+| **MCP Operations** | 212 | 6 | addConnection (4-param, branch, case), L-004, L-006, L-007, L-008 |
+| **Node Configuration** | 527 | 3 | expressions, parameters, L-005 Code variables, data access syntax |
+| **Switch Node** | 583 | 3 | L-006 reorder, L-007 sequential eval, L-008 duplicates, fan-out |
+| **Code Node** | 626 | 3 | L-005 variables, L-060 deprecated syntax, regex escaping |
+| **HTTP Request** | 665 | 3 | continueOnFail, L-101 credentials, status codes |
+| **Telegram Bot** | 705 | 5 | L-100 Reply Keyboard (HTTP), L-097 fixedCollection, webhooks, message types |
+| **AI Agent** | 874 | 13 | L-111 chatInput only, L-109 prompt over-specification, L-108 Memory Detection, L-107 DB session unreliable, L-106 optimizeResponse:false, L-105 never "IGNORE", L-104 quality gates, L-103 cascading, L-098 memory, L-009 nullable |
+| **Execution & Debugging** | 937 | 4 | L-067 two-step mode, anti-loop protocol, cycle limits, escalation |
+| **Validation Errors** | 1107 | 4 | Never Trust Defaults, L-053 false positive, L-054 QA override, schema mismatch |
+| **Notion Integration** | 1150 | 6 | Null-check dates, multi-user filters, timezone bug, page objects, Single Source of Truth |
+| **Supabase Database** | 1241 | 5 | Schema verification, get vs getAll, NOT NULL fields, RPC signatures, RLS policies |
+| **Common Gotchas** | 1324 | 4 | L-068 binary data, L-102 cascading changes, parameter changes, Never Trust Defaults |
 
 ### By Learning ID
 
 | ID | Line | Title | Impact |
 |----|------|-------|--------|
-| L-004 | 174 | IF connection without branch → node never executes | HIGH |
-| L-005 | 461 | Code Node variables from $input | MEDIUM |
-| L-006 | 199 | Switch reorder conditions → must update connections | CRITICAL |
-| L-007 | 248 | Switch sequential evaluation errors | CRITICAL |
-| L-008 | 297 | Switch duplicate connections | HIGH |
-| L-009 | 1090 | AI Agent tool nullable types | MEDIUM |
-| L-103 | 997 | Cascading context/memory overrides | CRITICAL |
-| L-104 | 950 | Debug Quality Gates (post-mortem) | HIGH |
-| L-105 | 915 | Never "COMPLETELY IGNORE" in prompts | CRITICAL |
-| L-106 | 851 | toolHttpRequest optimizeResponse:false blocks AI | HIGH |
-| L-107 | 808 | Session state DB unreliability | HIGH |
-| L-108 | 809 | Unified SESSION DETECTION - Memory vs DB | CRITICAL |
-| L-111 | 810 | AI Agent only reads chatInput field | CRITICAL |
-| L-109 | 877 | Prompt over-specification breaks features | CRITICAL |
-| L-053 | 1051 | IF Node validator false positive | LOW |
-| L-054 | 1063 | QA override for false positives | LOW |
-| L-060 | 574 | Code Node deprecated syntax timeout | CRITICAL |
-| L-067 | 1010 | Two-step execution for large workflows | CRITICAL |
-| L-068 | 1258 | IF nodes don't pass binary data | CRITICAL |
-| L-097 | 702 | Telegram fixedCollection format | MEDIUM |
-| L-098 | 860 | AI Agent memory caching | CRITICAL |
-| L-100 | 649 | Telegram Reply Keyboard (HTTP Request) | CRITICAL |
-| L-101 | 623 | HTTP Request credential expression | MEDIUM |
-| L-102 | 1276 | Cascading changes - test each | HIGH |
-| L-112 | 214 | DOT NOTATION required for updateNode (catastrophic fix) | CRITICAL |
+| L-113 | 34 | AI Agent Prompt Token Economy (4x waste) | CRITICAL |
+| L-110 | 102 | NEVER Fix Working Systems | CRITICAL |
+| L-112 | 280 | DOT NOTATION for updateNode | CRITICAL |
+| L-004 | 240 | IF connection without branch → node never executes | HIGH |
+| L-005 | 527 | Code Node variables from $input | MEDIUM |
+| L-006 | 265 | Switch reorder conditions → must update connections | CRITICAL |
+| L-007 | 314 | Switch sequential evaluation errors | CRITICAL |
+| L-008 | 363 | Switch duplicate connections | HIGH |
+| L-009 | 1156 | AI Agent tool nullable types | MEDIUM |
+| L-053 | 1117 | IF Node validator false positive | LOW |
+| L-054 | 1129 | QA override for false positives | LOW |
+| L-060 | 640 | Code Node deprecated syntax timeout | CRITICAL |
+| L-067 | 1076 | Two-step execution for large workflows | CRITICAL |
+| L-068 | 1324 | IF nodes don't pass binary data | CRITICAL |
+| L-097 | 768 | Telegram fixedCollection format | MEDIUM |
+| L-098 | 926 | AI Agent memory caching | CRITICAL |
+| L-100 | 715 | Telegram Reply Keyboard (HTTP Request) | CRITICAL |
+| L-101 | 689 | HTTP Request credential expression | MEDIUM |
+| L-102 | 1342 | Cascading changes - test each | HIGH |
+| L-103 | 1063 | Cascading context/memory overrides | CRITICAL |
+| L-104 | 1016 | Debug Quality Gates (post-mortem) | HIGH |
+| L-105 | 981 | Never "COMPLETELY IGNORE" in prompts | CRITICAL |
+| L-106 | 917 | toolHttpRequest optimizeResponse:false blocks AI | HIGH |
+| L-107 | 874 | Session state DB unreliability | HIGH |
+| L-108 | 875 | Unified SESSION DETECTION - Memory vs DB | CRITICAL |
+| L-109 | 943 | Prompt over-specification breaks features | CRITICAL |
+| L-111 | 876 | AI Agent only reads chatInput field | CRITICAL |
 
 ### By Tag
 
 | Tag | Lines | Description |
 |-----|-------|-------------|
-| #critical | 32, 199, 214, 248, 297, 574, 649, 751, 871, 896, 1258, 1276 | Critical issues - check first |
-| #mcp | 146-460 | MCP operations and tools |
-| #addConnection | 146, 174, 199 | Connection management |
-| #branch | 146, 174 | IF/Switch branch routing |
-| #case | 199, 297 | Switch case parameter |
-| #expressions | 32, 461 | n8n expression syntax |
-| #switch-node | 199, 248, 297, 517-559 | Switch Node issues |
-| #code-node | 461, 560-598 | Code Node patterns |
-| #telegram | 199, 248, 639-741 | Telegram bot issues |
-| #ai-agent | 742-870 | AI Agent configuration |
-| #validation | 32, 1041-1083 | Validation errors |
-| #execution | 871-1040 | Execution and debugging |
-| #anti-loop | 914-1013 | Anti-loop protocol |
-| #binary-data | 1258 | Binary data handling |
-| #debugging | 174, 248, 297, 871-1040 | Debugging techniques |
-| #dot-notation | 214 | DOT NOTATION for updateNode (L-112) |
-| #updateNode | 214 | n8n_update_partial_workflow updateNode |
+| #critical | 34, 98, 102, 265, 280, 314, 363, 640, 715, 817, 937, 962, 1324, 1342 | Critical issues - check first |
+| #ai-prompt | 34 | AI Agent prompt writing (L-113) |
+| #token-economy | 34 | Token efficiency for prompts |
+| #mcp | 212-526 | MCP operations and tools |
+| #addConnection | 212, 240, 265 | Connection management |
+| #branch | 212, 240 | IF/Switch branch routing |
+| #case | 265, 363 | Switch case parameter |
+| #expressions | 98, 527 | n8n expression syntax |
+| #switch-node | 265, 314, 363, 583-625 | Switch Node issues |
+| #code-node | 527, 626-664 | Code Node patterns |
+| #telegram | 265, 314, 705-807 | Telegram bot issues |
+| #ai-agent | 808-936 | AI Agent configuration |
+| #validation | 98, 1107-1149 | Validation errors |
+| #execution | 937-1106 | Execution and debugging |
+| #anti-loop | 980-1079 | Anti-loop protocol |
+| #binary-data | 1324 | Binary data handling |
+| #debugging | 240, 314, 363, 937-1106 | Debugging techniques |
+| #dot-notation | 280 | DOT NOTATION for updateNode (L-112) |
+| #updateNode | 280 | n8n_update_partial_workflow updateNode |
 
 ---
 
@@ -162,34 +167,35 @@ Edit("learning/LEARNINGS.md",
 
 ### Before Node Configuration
 
-1. **Set Node** → Line 32 (Critical Patterns) or Line 461 (Node Configuration)
-2. **IF Node** → Line 32 (Critical Patterns) or Line 146 (MCP - branch param)
-3. **Switch Node** → Line 517 (full section)
-4. **Code Node** → Line 560 (full section)
-5. **HTTP Request** → Line 32 (Critical Patterns) or Line 599 (full section)
-6. **Telegram** → Line 639 (full section)
-7. **AI Agent** → Line 742 (full section)
+1. **Set Node** → Line 98 (Critical Patterns) or Line 527 (Node Configuration)
+2. **IF Node** → Line 98 (Critical Patterns) or Line 212 (MCP - branch param)
+3. **Switch Node** → Line 583 (full section)
+4. **Code Node** → Line 626 (full section)
+5. **HTTP Request** → Line 98 (Critical Patterns) or Line 665 (full section)
+6. **Telegram** → Line 705 (full section)
+7. **AI Agent** → Line 808 (full section)
+8. **AI Prompt Writing** → Line 34 (L-113 token economy)
 
 ### Before Debugging
 
-1. **Execution Analysis** → Line 871 (L-067 two-step mode)
-2. **Anti-Loop Protocol** → Line 914 (cycle limits)
-3. **Validation Errors** → Line 1041 (false positives)
+1. **Execution Analysis** → Line 937 (L-067 two-step mode)
+2. **Anti-Loop Protocol** → Line 980 (cycle limits)
+3. **Validation Errors** → Line 1107 (false positives)
 
 ### Before Database Operations
 
-1. **Notion** → Line 1084 (filters, dates, timezone)
-2. **Supabase** → Line 1175 (schema, RPC, RLS)
+1. **Notion** → Line 1150 (filters, dates, timezone)
+2. **Supabase** → Line 1241 (schema, RPC, RLS)
 
 ---
 
 ## 📊 Statistics
 
-- **Total Lines:** 1,820+
-- **Total Entries:** 59
-- **Critical Issues:** 17 (L-004, L-006, L-007, L-008, L-060, L-067, L-068, L-097, L-098, L-100, L-102, L-103, L-105, L-108, L-109, L-111, L-112)
+- **Total Lines:** 1,886+
+- **Total Entries:** 60
+- **Critical Issues:** 18 (L-004, L-006, L-007, L-008, L-060, L-067, L-068, L-097, L-098, L-100, L-102, L-103, L-105, L-108, L-109, L-110, L-111, L-112, L-113)
 - **Categories:** 13
-- **Most Common Tags:** #critical, #mcp, #switch-node, #ai-agent, #debugging, #dot-notation, #updateNode
+- **Most Common Tags:** #critical, #ai-prompt, #token-economy, #mcp, #switch-node, #ai-agent, #debugging, #dot-notation, #updateNode
 - **Last Updated:** 2025-12-23
 
 ---

@@ -305,4 +305,102 @@ WebSearch({query: "n8n [PROBLEM] solution 2024 2025"})
 
 ---
 
-*Last Updated: 2025-12-22*
+## AI Prompt Writing (L-113)
+
+### ❌ BAD - Token Waste Patterns
+
+**1. Dialogue Rehearsals (15+ lines)**
+```markdown
+**Example flow with Tier 1:**
+User: /meals
+You: "Управление шаблонами блюд. Что хочешь сделать?"
+User: "добавить греча"
+You: [Call Search Food Nutrition("греча")]
+API returns: {calories: 110, protein: 4.2...}
+You: "Нашел данные для гречи: 📊 110ккал/100г..."
+User: "да"
+Tool call: Add User Meal {...}
+You: "✅ Шаблон 'греча' добавлен!"
+```
+**Problem:** AI doesn't need dialogue rehearsal!
+
+**2. Reference Data AI Already Knows**
+```markdown
+**Timezone Conversion:**
+- Монреаль → America/Toronto
+- Москва → Europe/Moscow
+- Киев → Europe/Kiev
+- Лондон → Europe/London
+- Париж → Europe/Paris
+- Берлин → Europe/Berlin
+[...20 more cities]
+```
+**Problem:** AI knows timezone mappings from training!
+
+**3. Human Checklists**
+```markdown
+**MANDATORY CHECKLIST before calling Update User Onboarding:**
+- [ ] Asked ALL 6 profile questions (a-f)
+- [ ] Asked ALL 6 macro questions (g-l)
+- [ ] Converted timezone to IANA
+- [ ] Have telegram_user_id from context
+```
+**Problem:** AI tracks this internally, doesn't need checkboxes!
+
+**4. "Why" Explanations**
+```markdown
+This is important because it ensures data consistency
+and prevents runtime errors that could occur if the
+system tries to process incomplete information...
+```
+**Problem:** Just state the rule!
+
+---
+
+### ✅ GOOD - Token-Efficient Patterns
+
+**1. Imperative Rules (1-2 lines)**
+```markdown
+Meal macro collection:
+1. Try Search Food Nutrition FIRST
+2. If empty → estimate → ask confirmation
+3. If uncertain → ask manual input
+NEVER save with null macros!
+```
+
+**2. Minimal Timezone Mapping**
+```markdown
+Timezone: convert to IANA.
+Montreal → America/Toronto; Moscow → Europe/Moscow; Kyiv → Europe/Kiev
+If uncertain: ask city/country
+```
+
+**3. Requirement (not checklist)**
+```markdown
+Before Update User Onboarding: MUST have all 12 fields + timezone (IANA) + telegram_user_id
+```
+
+**4. Direct Imperative**
+```markdown
+MUST ask confirmation before saving
+```
+
+---
+
+### Writing Checklist
+
+**Before saving AI_PROMPT.md:**
+1. ✅ All rules use MUST/NEVER/ALWAYS?
+2. ✅ Examples ≤3 lines each?
+3. ✅ No dialogue examples?
+4. ✅ No "why" explanations?
+5. ✅ No reference data AI already knows?
+6. ✅ Total <400 lines?
+
+**Test:** "If I delete this line, will AI still understand?"
+- NO → keep
+- YES → delete
+
+---
+
+*Last Updated: 2025-12-23*

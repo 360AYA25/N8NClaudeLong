@@ -392,6 +392,128 @@ See [ARCHITECTURE.md](projects/foodtracker/ARCHITECTURE.md#protected-nodes) for 
 
 ---
 
+## AI Agent Prompt Writing (L-113)
+
+⚠️ **PROBLEM:** Claude Code writes verbose AI prompts with massive token waste:
+- Dialogue examples (15+ lines of rehearsal)
+- "Why" explanations instead of imperatives
+- Human-oriented checklists/tables
+- Reference info (formulas, typical values) AI already knows
+- Duplicate rules in multiple forms
+
+**IMPACT:**
+- AI_PROMPT.md: 98 lines (~2.5K tokens) ✅ Good
+- Claude Code version: 400+ lines (~10K+ tokens) ❌ 4x waste!
+
+### The Solution: Token-Efficient Prompts
+
+**Core Rules:**
+1. **Imperatives ONLY**: Use MUST/NEVER/ALWAYS, not "you should" or "it's better"
+2. **Lists not paragraphs**: Bullet points, not prose
+3. **Syntax examples**: Show code/format (1-3 lines), not dialogues
+4. **No human formatting**: Skip checklists, tables designed for humans
+5. **Single source**: Don't repeat same rule in different forms
+6. **No redundant knowledge**: AI knows nutrition facts, timezone mappings, common formulas
+
+### Mandatory Rules
+
+| Rule | Instead Of | Use |
+|------|------------|-----|
+| **Imperatives** | "You should ask user for confirmation" | "MUST ask confirmation before saving" |
+| **Short examples** | 15-line dialogue | `Tool({param: value})` (1-2 lines) |
+| **Lists** | Paragraph explanations | • Rule 1<br>• Rule 2 |
+| **No "why"** | "This is important because..." | Just the rule |
+| **Reference → separate** | Inline formulas/typical values | Link to separate doc OR omit (AI knows) |
+
+### Good vs Bad Examples
+
+❌ **BAD** (token waste):
+```
+**Example flow with Tier 1:**
+User: /meals
+You: "Управление шаблонами блюд. Что хочешь сделать?"
+User: "добавить греча"
+You: [Call Search Food Nutrition("греча")]
+API returns: {calories: 110, protein: 4.2...}
+You: "Нашел данные для гречи: 📊 110ккал/100г..."
+User: "да"
+Tool call: Add User Meal {...}
+```
+**Problem:** 15 lines for 1 concept. AI doesn't need dialogue rehearsal!
+
+✅ **GOOD** (token efficient):
+```
+Meal macro collection (3-tier):
+1. Try Search Food Nutrition(product_name) FIRST
+2. If empty → estimate from knowledge → ask confirmation
+3. If uncertain → ask user for manual values
+NEVER save meal with null macros!
+```
+**Why better:** 5 lines vs 15, same information.
+
+---
+
+❌ **BAD** (redundant knowledge):
+```
+**AI Estimation Guidelines:**
+- Be conservative (better underestimate than over)
+- Consider main ingredients
+- Typical ranges per 100g:
+  - Simple salad: 20-40 ккал
+  - Meat dish: 150-250 ккал
+  - Porridge: 80-120 ккал
+```
+**Problem:** Reference data AI already knows from training!
+
+✅ **GOOD** (imperative):
+```
+AI estimation: Use nutrition knowledge → show calculation → ask confirmation
+```
+**Why better:** 1 line vs 7, no redundant knowledge.
+
+---
+
+❌ **BAD** (human checklist):
+```
+**MANDATORY CHECKLIST before calling Update User Onboarding:**
+- [ ] Asked ALL 6 profile questions (a-f)
+- [ ] Asked ALL 6 macro questions (g-l)
+- [ ] Converted timezone to IANA
+- [ ] Have telegram_user_id from context
+```
+**Problem:** Interactive checklist for humans. AI tracks this internally!
+
+✅ **GOOD** (requirement):
+```
+Before Update User Onboarding: MUST have all 12 fields + timezone (IANA) + telegram_user_id
+```
+**Why better:** 1 line vs 5, same constraint.
+
+### Token Economy Reference
+
+**Max prompt sizes:**
+- AI Agent prompts: **400 lines max**
+- Config examples: **≤3 lines** (see global CLAUDE.md)
+- Code blocks in docs: **≤15 lines** → else pseudocode + file reference
+
+**Test:** "If I delete this line, will AI still understand?"
+- NO → keep
+- YES → delete
+
+### Writing Checklist
+
+**Before saving AI_PROMPT.md:**
+1. All rules use MUST/NEVER/ALWAYS?
+2. Examples ≤3 lines each?
+3. No dialogue examples?
+4. No "why" explanations?
+5. No reference data AI already knows?
+6. Total <400 lines?
+
+**Reference:** L-113 in [learning/LEARNINGS.md](learning/LEARNINGS.md)
+
+---
+
 ## Debug Quality Gates (POST-MORTEM LESSON)
 
 ⚠️ **MANDATORY BEFORE ANY DEPLOY** - Learned from 18-cycle debug disaster

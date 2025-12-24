@@ -31,6 +31,74 @@
 
 ## Critical Patterns
 
+### [2025-12-23 18:00] L-113: AI Agent Prompt Token Economy (4x Waste)
+
+**Problem:** Claude Code writes verbose AI prompts with massive token waste
+
+**Impact:**
+- AI_PROMPT.md: 98 lines (~2.5K tokens) ✅ Good
+- Claude Code verbose version: 400+ lines (~10K+ tokens) ❌ 4x waste!
+
+**Waste Sources:**
+1. **Dialogue rehearsals** - 15+ line examples showing User/AI back-and-forth
+2. **"Why" explanations** - Paragraphs explaining reasoning instead of imperatives
+3. **Human checklists** - Interactive checkboxes AI doesn't need
+4. **Reference data** - Nutrition facts, timezone mappings, formulas AI already knows
+5. **Duplicate rules** - Same rule in 3+ different forms
+6. **Verbose examples** - Full conversations instead of syntax snippets
+
+**Solution - Token-Efficient Prompt Rules:**
+1. **Imperatives ONLY**: MUST/NEVER/ALWAYS (not "you should")
+2. **Lists not paragraphs**: Bullet points, no prose
+3. **Syntax examples**: 1-3 lines of code/format (no dialogues)
+4. **No human formatting**: Skip checklists, tables for humans
+5. **Single source**: Don't repeat rules
+6. **No redundant knowledge**: AI knows common facts
+
+**Examples:**
+
+❌ BAD (15 lines):
+```
+**Example flow:**
+User: /meals
+You: "Управление шаблонами..."
+User: "добавить греча"
+[...13 more lines of dialogue]
+```
+
+✅ GOOD (5 lines):
+```
+Meal macro collection:
+1. Try Search Food Nutrition FIRST
+2. If empty → estimate → ask confirmation
+3. If uncertain → ask manual input
+NEVER save with null macros!
+```
+
+❌ BAD (7 lines of reference data):
+```
+**Typical ranges per 100g:**
+- Simple salad: 20-40 ккал
+- Meat dish: 150-250 ккал
+- Porridge: 80-120 ккал
+```
+
+✅ GOOD (1 line):
+```
+Use nutrition knowledge → show calculation → ask confirmation
+```
+
+**Prevention:**
+- Max AI prompts: 400 lines
+- Config examples: ≤3 lines each
+- Test: "If I delete this, will AI understand?" YES → delete
+- NO dialogue rehearsals
+- NO reference data AI already knows
+
+**Reference:** CLAUDE.md "AI Agent Prompt Writing (L-113)" section
+
+---
+
 ### [2025-12-23 03:00] L-110: NEVER Fix Working Systems (Catastrophic Failure)
 
 **Problem:** Claude "fixed" bot responding in English → BROKE working workflow → User had to rollback at 3AM

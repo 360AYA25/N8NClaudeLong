@@ -2,6 +2,77 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.12.0] - 2025-12-23
+
+### AI Agent Prompt Writing Protocol (L-113) - Token Economy
+
+**Problem:** Claude Code writes verbose AI prompts with 4x token waste. AI_PROMPT.md was well-written (98 lines, ~2.5K tokens), but Claude's verbose version had 400+ lines (~10K+ tokens) with dialogue rehearsals, "why" explanations, human checklists, and reference data AI already knows.
+
+**Root Cause:** No rules for writing token-efficient AI prompts. Claude treats prompts like documentation for humans, not instructions for AI.
+
+**Solution:** Mandatory token economy protocol with writing rules and examples.
+
+### Added
+
+**New Section in CLAUDE.md:**
+- AI Agent Prompt Writing (L-113) - after Important Rules
+- The Problem: Verbose prompt patterns with 4x waste
+- The Solution: 6 core rules (imperatives only, lists not paragraphs, syntax examples, no human formatting, single source, no redundant knowledge)
+- Mandatory Rules table (5 rules with before/after examples)
+- Good vs Bad Examples (3 comparisons: dialogue rehearsals, redundant knowledge, human checklists)
+- Token Economy Reference (max sizes, test criteria)
+- Writing Checklist (6 questions before saving)
+
+**New Entry in learning/LEARNINGS.md:**
+- L-113: AI Agent Prompt Token Economy (4x Waste)
+- Problem with impact analysis
+- 6 waste sources (dialogue rehearsals, "why" explanations, human checklists, reference data, duplicate rules, verbose examples)
+- Solution: 6 token-efficient prompt rules
+- Before/after examples (dialogue 15→5 lines, reference data 7→1 line)
+- Prevention rules (max 400 lines, ≤3 line examples, test criteria)
+- Tags: #ai-prompt #token-economy #critical
+
+**New Section in learning/CODE_EXAMPLES.md:**
+- AI Prompt Writing (L-113)
+- ❌ BAD patterns: 4 examples with explanations
+- ✅ GOOD patterns: 4 token-efficient alternatives
+- Writing Checklist with 6 checkpoints
+
+### Changed
+
+**learning/INDEX.md:**
+- Added L-113 to Critical Issues table (1st position - BEFORE writing AI_PROMPT.md)
+- Updated By Category: Critical Patterns now 6 entries (was 5), added L-113 to topics
+- Added L-113 to By Learning ID table (CRITICAL impact)
+- Added new tags: #ai-prompt, #token-economy
+- Updated statistics: 60 entries (was 59), 18 critical (was 17)
+- Updated all line numbers (+66 shift from L-113 insertion)
+- Added "AI Prompt Writing" to Quick Access Paths
+
+### Impact
+
+**Before:** Claude writes 400+ line prompts with dialogue examples, checklists, reference data → 4x token waste
+
+**After:** Token-efficient prompts with imperatives, minimal examples, no redundancy → 98 lines (~2.5K tokens) ✅
+
+### Token Savings
+
+- **Dialogue rehearsals:** 15 lines → 5 lines (10 lines saved)
+- **Reference data:** 7 lines → 1 line (6 lines saved)
+- **Checklists:** 5 lines → 1 line (4 lines saved)
+- **Total reduction:** ~400 lines → ~100 lines (75% token reduction)
+
+### Writing Rules
+
+1. **Imperatives ONLY** - Use MUST/NEVER/ALWAYS
+2. **Lists not paragraphs** - Bullet points only
+3. **Syntax examples** - 1-3 lines, no dialogues
+4. **No human formatting** - Skip checklists/tables
+5. **Single source** - Don't repeat rules
+6. **No redundant knowledge** - AI knows common facts
+
+---
+
 ## [1.11.0] - 2025-12-23
 
 ### Node Modification Protocol (L-112) - DOT NOTATION Enforcement
